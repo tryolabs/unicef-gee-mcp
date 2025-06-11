@@ -1,0 +1,71 @@
+name: Check PR style
+
+on:
+  pull_request:
+    types:
+      - assigned
+      - unassigned
+      - labeled
+      - unlabeled
+      - opened
+      - edited
+      - reopened
+      - synchronize
+      - ready_for_review
+      - review_requested
+      - review_request_removed
+jobs:
+  check_pr_title:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Check if PR title ends with a period
+        env:
+          TITLE: ${{ github.event.pull_request.title }}  # Avoid `` in title causing command execution.
+        run: |
+          title="$TITLE"
+          if [[ "$title" == *"." ]]; then
+              echo "The PR title ends with a period. Please remove it."
+              exit 1
+          else
+              echo "Title ends with a period. Title: $title"
+          fi
+      - name: Check if PR title starts with a capital letter
+        env:
+          TITLE: ${{ github.event.pull_request.title }}  # Avoid `` in title causing command execution.
+        run: |
+          title="$TITLE"
+          if [[ ! ${title:0:1} =~ [A-Z] ]]; then
+              echo "First character of a PR title should be UPPERCASE."
+              exit 1
+          else
+            echo "Title starts with uppercase. Title: $title"
+          fi
+  check_pr_label:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Check number of PR labels
+        env:
+          LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
+        run: |
+          label_count=$(echo "$LABELS" | jq 'length')
+          if [ "$label_count" -eq 0 ]; then
+            echo "There are no labels on this PR, please add at least one."
+            exit 1
+          else
+            echo "PR has $label_count label(s)."
+          fi
+  check_pr_asignees:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR has at least one assignee
+        run: |
+          assignees_json='${{ toJson(github.event.pull_request.assignees) }}'
+          if [ "$(echo "$assignees_json" | jq '. | length')" -eq 0 ]; then
+            echo "No user is assigned to this pull request."
+            exit 1
+          else
+            assignees=$(echo "$assignees_json" | jq -r '[.[].login] | join(", ")')
+            echo "Assigned users: $assignees"
+          fi

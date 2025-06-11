@@ -1,0 +1,25 @@
+# If you make changes to this file, you should run `poetry run pre-commit install` to update the hooks
+# Remember to update the version of the ruff-pre-commit repo when you update Ruff
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.7
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=5120"]
+      - id: check-json
+        types: [json]
+        exclude: ^\.vscode/.*$ # Ignore .vscode folder which uses JSONC.
+      - id: check-toml
+        types: [toml]
+      - id: check-yaml
+        types: [yaml]
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.3.0
+    hooks:
+      - id: detect-secrets

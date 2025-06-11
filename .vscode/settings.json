@@ -1,0 +1,46 @@
+{
+  //
+  // Set correct python path to venv's one
+  //
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  //
+  // Hide .venv from explorer and searchbar
+  //
+  "files.watcherExclude": {
+    "**/.venv/**": true,
+    "**/.ruff_cache/**": true
+  },
+  "files.exclude": {
+    "**/.venv/": true,
+    "**/.ruff_cache/": true
+  },
+  "search.exclude": {
+    "**/.venv/": true,
+    "**/.ruff_cache/": true
+  },
+  //
+  // Linting and formatting
+  //
+  // Configured following https://github.com/astral-sh/ruff-vscode?tab=readme-ov-file#configuring-vs-code
+  // guidelines.
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports.ruff": "explicit"
+    },
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "editor.rulers": [
+    100 // if changing line length, also do it in pyproject.toml's [tool.ruff] section
+  ],
+  "editor.wordWrapColumn": 100,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  //
+  // Jupyter
+  //
+  "jupyter.notebookFileRoot": "${workspaceFolder}",
+  "jupyter.interactiveWindow.textEditor.executeSelection": true,
+  // TODO: this setting is showing a deprecation warning. Maybe we should drop it?
+  "jupyter.generateSVGPlots": true
+}

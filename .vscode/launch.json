@@ -1,0 +1,64 @@
+{
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    // Quick reference:
+    // env (Mapping[str, str]): Environment variables to set for the program being debugged.
+    // justMyCode (bool): If true, only stop in breakpoints in user code. Otherwise, stop in any breakpoint.
+    // inputs (List[Input]): Define inputs that VSCode will request from the user via the UI when launching the debugger.
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+        },
+        {
+            "name": "FastAPI App",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn", // You could use gunicorn or your own .py file.
+            "args": [
+                "your_package.apis.service.app:app",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "8001",
+                "--reload"
+            ],
+            "justMyCode": true
+        },
+        {
+            "name": "CLI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/.venv/bin/cli-name",
+            "args": [
+                "subcommand",
+                "argument",
+                "--option",
+                "value",
+            ],
+            "justMyCode": true
+        },
+    ],
+    "inputs": [
+        {
+            "id": "STAGE",
+            "type": "pickString",
+            "description": "Select the stage you want to run the code in",
+            "options": [
+                {
+                    "label": "Development",
+                    "value": "development"
+                },
+                {
+                    "label": "Production",
+                    "value": "production"
+                }
+            ],
+            "default": "development"
+        },
+    ]
+}
