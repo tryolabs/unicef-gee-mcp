@@ -20,7 +20,7 @@
             "request": "launch",
             "module": "uvicorn", // You could use gunicorn or your own .py file.
             "args": [
-                "your_package.apis.service.app:app",
+                "ee_mcp.apis.service.app:app",
                 "--host",
                 "0.0.0.0",
                 "--port",

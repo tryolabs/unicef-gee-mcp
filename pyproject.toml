@@ -198,3 +198,39 @@ exclude = [
 # Settings for google standard.
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.ruff.flake8-annotations]
+allow-star-arg-any = true
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.11.13"
+docstr-coverage = "^2.3.2"
+pytest = "^8.4.0"
+pytest-cov = "^6.1.1"
+pre-commit = "^4.2.0"
+detect-secrets = "^1.5.0"
+memray = "^1.17.2"
+pyinstrument = "^5.0.2"
+
+
+[tool.poetry.group.cicd.dependencies]
+basedpyright = "^1.29.3"
+
+[project]
+name = "ee-mcp"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Federico Bello",email = "fe.debello13@gmail.com"}
+]
+readme = "README.md"
+requires-python = "~=3.11"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+[tool.poetry]
+requires-poetry = ">=2.0"
