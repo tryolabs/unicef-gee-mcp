@@ -1,9 +1,35 @@
+[project]
+name = "ee-mcp"
+version = "0.1.0"
+description = ""
+authors = [{ name = "Federico Bello", email = "fe.debello13@gmail.com" }]
+requires-python = "~=3.11"
+readme = "README.md"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [tool.pytest.ini_options]
 # Adding the current directory to the Python path so that pytest can find the modules to test.
 # Directories will be added to the head of sys.path
 # Docs relevant to this step: https://docs.pytest.org/en/7.1.x/reference/reference.html#confval-pythonpath
 pythonpath = "."
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.13,<0.12",
+    "docstr-coverage>=2.3.2,<3",
+    "pytest>=8.4.0,<9",
+    "pytest-cov>=6.1.1,<7",
+    "pre-commit>=4.2.0,<5",
+    "detect-secrets>=1.5.0,<2",
+    "memray>=1.17.2,<2",
+    "pyinstrument>=5.0.2,<6",
+]
+cicd = ["basedpyright>=1.29.3,<2"]
 
 [tool.coverage.report]
 exclude_also = [
@@ -30,11 +56,17 @@ omit = ["**/tests/*", "*/__init__.py", "**/logging_config.py"]
 
 include_namespace_packages = "true"
 
+[tool.uv]
+default-groups = [
+    "dev",
+    "cicd",
+]
+
 [tool.ruff]
 line-length = 100
 extend-exclude = [".venv"]
 
-[tool.pyright] # Configures VSCode Pylance and basedpyright in CI/CD.
+[tool.pyright]
 # Very optional: type checking. Values are off, basic and strict. See more at https://code.visualstudio.com/docs/python/settings-reference#_pylance-language-server.
 typeCheckingMode = "strict"
 
@@ -194,43 +226,11 @@ exclude = [
     "venv",
 ]
 
-
-# Settings for google standard.
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.ruff.flake8-annotations]
 allow-star-arg-any = true
 
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.11.13"
-docstr-coverage = "^2.3.2"
-pytest = "^8.4.0"
-pytest-cov = "^6.1.1"
-pre-commit = "^4.2.0"
-detect-secrets = "^1.5.0"
-memray = "^1.17.2"
-pyinstrument = "^5.0.2"
-
-
-[tool.poetry.group.cicd.dependencies]
-basedpyright = "^1.29.3"
-
-[project]
-name = "ee-mcp"
-version = "0.1.0"
-description = ""
-authors = [
-    {name = "Federico Bello",email = "fe.debello13@gmail.com"}
-]
-readme = "README.md"
-requires-python = "~=3.11"
-dependencies = [
-]
-
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
-[tool.poetry]
-requires-poetry = ">=2.0"
+[tool.hatch.build.targets.wheel]
+packages = ["gee_mcp"]
