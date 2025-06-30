@@ -1,0 +1,3 @@
+server:
+  port: 6002
+  transport: "sse" # one of "stdio", "sse", "streamable-http"
