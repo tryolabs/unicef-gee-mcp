@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import Any
 
 from datasets import load_datasets_metadata
+from ee.deserializer import fromJSON
 from ee.image import Image
 from ee.imagecollection import ImageCollection
 from schemas import DatasetMetadata
@@ -24,7 +24,7 @@ def handle_get_all_datasets_and_metadata(
 def handle_get_dataset_image(
     dataset: str,
     path_to_metadata: Path,
-) -> dict[str, Any]:
+) -> str:
     """Get an image from Earth Engine and return its JSON representation and metadata.
 
     Args:
@@ -59,6 +59,31 @@ def handle_get_dataset_image(
         if dataset == "agricultural_drought":
             image = image.updateMask(image.lte(100))
 
-    return {
-        "image_json": image.serialize(),
-    }
+    return image.serialize()
+
+
+def handle_mask_image(image_json: str, mask_image_json: str) -> str:
+    """Mask an Earth Engine image based on a mask.
+
+    Args:
+        image_json: JSON string of the Earth Engine image
+        mask_image_json: JSON string of the Earth Engine binary image mask.
+
+    Returns:
+        dict: A dictionary containing:
+            - image_json: JSON string of the masked Earth Engine image
+
+    Use case:
+        Get the zone of exposed children to a hazard.
+        mask_image(
+            "child_population_data.json",
+            "hazard_data.json",
+        )
+
+    Note:
+        Do not provide a value for temp_dir, it will be handled automatically.
+    """
+    image = fromJSON(image_json)
+    mask = fromJSON(mask_image_json)
+    masked_image = image.updateMask(mask)
+    return masked_image.serialize()

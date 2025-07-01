@@ -3,6 +3,8 @@ import inspect
 from collections.abc import Callable
 from typing import Any
 
+from json_repair import repair_json
+
 
 def add_input_args_to_result(func: Callable[..., dict[str, Any]]) -> Callable[..., dict[str, Any]]:
     """A decorator that captures the input arguments of the decorated function and returns them.
@@ -37,3 +39,22 @@ def add_input_args_to_result(func: Callable[..., dict[str, Any]]) -> Callable[..
         return final_result
 
     return wrapper
+
+
+def safe_json_loads(json_str: str) -> str:
+    """Safe JSON loads.
+
+    Args:
+        json_str: JSON string
+
+    Returns:
+        JSON string
+
+    Raises:
+        ValueError: If the JSON string is invalid
+    """
+    res = repair_json(json_str)
+    if res == "":
+        msg = "Invalid JSON string"
+        raise ValueError(msg)
+    return res
