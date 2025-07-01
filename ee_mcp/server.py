@@ -4,7 +4,9 @@ from handlers import (
     handle_filter_image_by_threshold,
     handle_get_all_datasets_and_metadata,
     handle_get_dataset_image,
+    handle_intersect_binary_images,
     handle_mask_image,
+    handle_union_binary_images,
 )
 from initialize import initialize_ee, load_all_datasets
 from logging_config import get_logger
@@ -135,6 +137,74 @@ def filter_image_by_threshold(
     """
     image_json = safe_json_loads(image_json)
     res = handle_filter_image_by_threshold(image_json, threshold)
+    return {"image_json": res}
+
+
+@mcp.tool(name="union_binary_images")
+@add_input_args_to_result
+def union_binary_images(
+    binary_images_jsons: list[str],
+) -> dict[str, str]:
+    """Union multiple binary images.
+
+    This function loads binary images from the provided paths and performs
+    a union operation, returning a new binary image where any of the input images
+    have values of 1.
+
+    Args:
+        binary_images_jsons: List of JSON strings of the binary images to union.
+            Each JSON should point to a valid Earth Engine Image.
+
+    Returns:
+        dict: A dictionary containing:
+            - image_json: JSON string of the union result
+            - input_arguments: The original input arguments used for the operation
+
+    Use case:
+        Union two binary images to find areas that are either hazard zones.
+        union_binary_images(["flood_zones.json", "drought_zones.json"])
+
+    Note:
+        Do not provide a value for temp_dir, it will be handled automatically.
+    """
+    for i, image_json in enumerate(binary_images_jsons):
+        binary_images_jsons[i] = safe_json_loads(image_json)
+
+    res = handle_union_binary_images(binary_images_jsons)
+    return {"image_json": res}
+
+
+@mcp.tool(name="intersect_binary_images")
+@add_input_args_to_result
+def intersect_binary_images(
+    binary_images_jsons: list[str],
+) -> dict[str, str]:
+    """Intersect multiple binary images.
+
+    This function loads binary images from the provided paths and performs
+    an intersection operation, returning a new binary image where all the input images
+    have values of 1.
+
+    Args:
+        binary_images_jsons: List of JSON strings of the binary images to intersect.
+            Each JSON should point to a valid Earth Engine Image.
+
+    Returns:
+        dict: A dictionary containing:
+            - image_json: JSON string of the intersection result
+            - input_arguments: The original input arguments used for the operation
+
+    Use case:
+        Intersect two binary images to find areas that are both hazard zones.
+        intersect_binary_images(["flood_zones.json", "drought_zones.json"])
+
+    Note:
+        Do not provide a value for temp_dir, it will be handled automatically.
+    """
+    for i, image_json in enumerate(binary_images_jsons):
+        binary_images_jsons[i] = safe_json_loads(image_json)
+
+    res = handle_intersect_binary_images(binary_images_jsons)
     return {"image_json": res}
 
 

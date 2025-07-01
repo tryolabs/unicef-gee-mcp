@@ -74,8 +74,8 @@ def handle_mask_image(image_json: str, mask_image_json: str) -> str:
         dict: A dictionary containing:
             - image_json: JSON string of the masked Earth Engine image
     """
-    image = fromJSON(image_json)
-    mask = fromJSON(mask_image_json)
+    image: Image = fromJSON(image_json)
+    mask: Image = fromJSON(mask_image_json)
     masked_image = image.updateMask(mask)
     return masked_image.serialize()
 
@@ -98,7 +98,48 @@ def handle_filter_image_by_threshold(image_json: str, threshold: float) -> str:
     image = fromJSON(image_json)
 
     # Create a mask where values are less than threshold
-    threshold_ee = Number(threshold)
-    filtered_mask = image.lt(threshold_ee) if threshold < 0 else image.gt(threshold_ee)
+    threshold_ee: Number = Number(threshold)
+    filtered_mask: Image = image.lt(threshold_ee) if threshold < 0 else image.gt(threshold_ee)
 
     return filtered_mask.serialize()
+
+
+def handle_union_binary_images(
+    binary_images_jsons: list[str],
+) -> str:
+    """Union multiple binary images.
+
+    Args:
+        binary_images_jsons: List of JSON strings of the binary images to union.
+            Each JSON should point to a valid Earth Engine Image.
+
+    Returns:
+        str: JSON string of the union result
+    """
+    # Unmask the image to ensure non-data is treated as 0
+    union: Image = fromJSON(binary_images_jsons[0]).unmask(0)
+    for path in binary_images_jsons[1:]:
+        new_data: Image = fromJSON(path).unmask(0)
+        union = union.Or(new_data)
+
+    return union.serialize()
+
+
+def handle_intersect_binary_images(
+    binary_images_jsons: list[str],
+) -> str:
+    """Intersect multiple binary images.
+
+    Args:
+        binary_images_jsons: List of JSON strings of the binary images to intersect.
+            Each JSON should point to a valid Earth Engine Image.
+
+    Returns:
+        str: JSON string of the intersection result
+    """
+    intersection: Image = fromJSON(binary_images_jsons[0])
+    for path in binary_images_jsons[1:]:
+        new_data: Image = fromJSON(path)
+        intersection = intersection.And(new_data)
+
+    return intersection.serialize()
