@@ -1,16 +1,24 @@
 from pathlib import Path
 from typing import cast
 
+import ee
+import pycountry
 from datasets import load_datasets_metadata
 from ee.deserializer import fromJSON
 from ee.ee_number import Number
 from ee.errormargin import ErrorMargin
 from ee.feature import Feature
 from ee.featurecollection import FeatureCollection
+from ee.filter import Filter
 from ee.image import Image
 from ee.imagecollection import ImageCollection
 from ee.reducer import Reducer
-from schemas import REDUCERS, DatasetMetadata
+from schemas import AREA_TYPES, REDUCERS, DatasetMetadata
+
+BASE_ASSETS_PATH = "projects/unicef-ccri/assets"
+COUNTRY_BOUNDRIES_DATASET = f"{BASE_ASSETS_PATH}/adm0_wfp"
+ADMIN_LEVEL_1_BOUNDRIES_DATASET = "WM/geoLab/geoBoundaries/600/ADM1"
+TH_SHAPE_AREA = 33
 
 
 def handle_get_all_datasets_and_metadata(
@@ -22,7 +30,7 @@ def handle_get_all_datasets_and_metadata(
         path_to_metadata: Path to the metadata YAML file
 
     Returns:
-        A dictionary containing the metadata and JSON representation of the image.
+        dict[str, DatasetMetadata]: A dictionary containing the metadata for all datasets.
     """
     return load_datasets_metadata(path_to_metadata)
 
@@ -31,26 +39,14 @@ def handle_get_dataset_image(
     dataset: str,
     path_to_metadata: Path,
 ) -> str:
-    """Get an image from Earth Engine and return its JSON representation and metadata.
+    """Get an image from Earth Engine and return its JSON representation.
 
     Args:
-        dataset: The dataset to get the image and metadata for
+        dataset: The dataset to get the image for
         path_to_metadata: Path to the metadata YAML file
 
     Returns:
-        A dictionary containing the metadata and JSON representation of the image.
-        The metadata includes:
-        - image_filename: Name of the image file
-        - asset_id: Earth Engine asset identifier
-        - description: Description of the dataset
-        - source_name: Name of the data source
-        - source_url: URL of the data source
-        - mosaic: Boolean indicating if this is a mosaic dataset
-        - threshold: Optional threshold value for filtering
-        - input_arguments: Optional dictionary of input arguments
-        - color_palette: Optional list of color palette strings
-
-        The image_json field contains the serialized Earth Engine image object.
+        str: JSON string of the Earth Engine image object.
 
     Use case:
         Retrieve a global agricultural drought dataset to analyze drought conditions:
@@ -76,8 +72,7 @@ def handle_mask_image(image_json: str, mask_image_json: str) -> str:
         mask_image_json: JSON string of the Earth Engine binary image mask.
 
     Returns:
-        dict: A dictionary containing:
-            - image_json: JSON string of the masked Earth Engine image
+        str: JSON string of the masked Earth Engine image
     """
     image: Image = fromJSON(image_json)
     mask: Image = fromJSON(mask_image_json)
@@ -93,9 +88,7 @@ def handle_filter_image_by_threshold(image_json: str, threshold: float) -> str:
         threshold: Numeric value to use as the threshold for filtering
 
     Returns:
-        dict: A dictionary containing:
-            - image_json: JSON string of the filtered Earth Engine image
-            - input_arguments: The original input arguments used for the operation
+        str: JSON string of the filtered Earth Engine image
 
     Raises:
         TypeError: If the loaded data is not an Earth Engine Image object
@@ -161,7 +154,7 @@ def handle_intersect_feature_collections(feature_collections_jsons: list[str]) -
         str: JSON string of the intersection result
 
     Raises:
-        ValueError: If no feature collections are provided or if any input is an Image
+        TypeError: If any input is an Image
     """
     intersection = fromJSON(feature_collections_jsons[0])
     if isinstance(intersection, Image):
@@ -191,7 +184,7 @@ def handle_merge_feature_collections(feature_collections_jsons: list[str]) -> st
         str: JSON string of the merged result
 
     Raises:
-        ValueError: If no feature collections are provided or if any input is an Image
+        TypeError: If any input is an Image
     """
     union = fromJSON(feature_collections_jsons[0])
     if isinstance(union, Image):
@@ -242,6 +235,9 @@ def handle_reduce_image(
 
     Returns:
         float: The reduced value
+
+    Raises:
+        ValueError: If no statistics are found
     """
     image: Image = fromJSON(image_json)
     feature_collection: FeatureCollection = fromJSON(feature_collection_json)
@@ -262,3 +258,85 @@ def handle_reduce_image(
         aggregation_result += feature["properties"][reducer]
 
     return aggregation_result
+
+
+def handle_get_zone_of_area(area_name: str, area_type: AREA_TYPES) -> str:
+    """Get the zone boundary for a specified area.
+
+    Args:
+        area_name: Name of the area to get boundary for.
+                If it is a country, it should be the ISO 3166-1 alpha-3 code.
+        area_type: Type of area - either 'country' or 'admin1'. Determines which
+            dataset to query.
+
+    Returns:
+        str: A JSON string of the zone boundary.
+    """
+    if area_type == "country":
+        area_name = get_country_code(area_name)
+        countries_boundries = FeatureCollection(COUNTRY_BOUNDRIES_DATASET)
+
+        area_boundry = countries_boundries.filter(Filter.eq("iso3", area_name))
+
+        shape_area = area_boundry.first().getNumber("Shape_Area")
+
+        simplification_tolerance = ee.Algorithms.If(
+            shape_area.gt(Number(TH_SHAPE_AREA)), 10000, 100
+        )
+
+        area_boundry = FeatureCollection(area_boundry.geometry().simplify(simplification_tolerance))
+
+    else:
+        admin_level_1_boundries = FeatureCollection(ADMIN_LEVEL_1_BOUNDRIES_DATASET)
+        area_boundry = admin_level_1_boundries.filter(Filter.eq("shapeName", area_name))
+
+    area_boundry_json = area_boundry.serialize()
+
+    return area_boundry_json
+
+
+def standarize_country_name(country: str) -> str:
+    """Standardize a country name to its official form.
+
+    Uses pycountry to look up the official name of a country from various input formats.
+
+    Args:
+        country: Country name, 2-letter code, or 3-letter code to standardize.
+
+    Returns:
+        str: Official country name if found, otherwise returns the input unchanged.
+    """
+    try:
+        country_obj = (
+            pycountry.countries.get(name=country)
+            or pycountry.countries.get(alpha_2=country)
+            or pycountry.countries.get(alpha_3=country)
+        )
+        if country_obj:
+            return country_obj.name
+        else:
+            return country
+    except KeyError:
+        return country
+
+
+def get_country_code(country: str) -> str:
+    """Get the 3-letter ISO country code for a country.
+
+    Standardizes the country name first, then looks up its ISO 3166-1 alpha-3 code.
+
+    Args:
+        country: Country name, 2-letter code, or 3-letter code to look up.
+
+    Returns:
+        str: 3-letter ISO country code if found, otherwise returns the input unchanged.
+    """
+    try:
+        country = standarize_country_name(country)
+        country_obj = pycountry.countries.get(name=country)
+        if country_obj:
+            return country_obj.alpha_3
+        else:
+            return country
+    except KeyError:
+        return country

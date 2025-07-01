@@ -4,6 +4,7 @@ from handlers import (
     handle_filter_image_by_threshold,
     handle_get_all_datasets_and_metadata,
     handle_get_dataset_image,
+    handle_get_zone_of_area,
     handle_intersect_binary_images,
     handle_intersect_feature_collections,
     handle_mask_image,
@@ -14,7 +15,7 @@ from handlers import (
 from initialize import initialize_ee, load_all_datasets
 from logging_config import get_logger
 from mcp.server.fastmcp import FastMCP
-from schemas import REDUCERS, DatasetMetadata
+from schemas import AREA_TYPES, REDUCERS, DatasetMetadata
 from utils import add_input_args_to_result, safe_json_loads
 
 load_dotenv(override=True)
@@ -302,6 +303,38 @@ def reduce_image(
     feature_collection_json = safe_json_loads(feature_collection_json)
     res = handle_reduce_image(image_json, feature_collection_json, reducer, scale)
     return {"aggregation_result": res}
+
+
+@mcp.tool(name="get_zone_of_area")
+@add_input_args_to_result
+def get_zone_of_area(
+    area_name: str,
+    area_type: AREA_TYPES,
+) -> dict[str, str]:
+    """Get the zone boundary for a specified area and save it as a vector file.
+
+    Retrieves the boundary geometry for either a country or admin level 1 area from
+    Earth Engine and saves it as a GeoJSON file.
+
+    Args:
+        area_name: Name of the area to get boundary for.
+                If it is a country, it should be the ISO 3166-1 alpha-3 code.
+        area_type: Type of area - either 'country' or 'admin1'. Determines which
+            dataset to query.
+
+    Returns:
+        dict[str, str]: A dictionary containing:
+            - zone_path: Path to the saved GeoJSON vector file
+
+    Example:
+        To get boundary data for France:
+        >>> zone_path = get_zone_of_area("France", "country")
+
+        To get boundary data for California:
+        >>> zone_path = get_zone_of_area("California", "admin1")
+    """
+    res = handle_get_zone_of_area(area_name, area_type)
+    return {"zone_path": res}
 
 
 if __name__ == "__main__":
