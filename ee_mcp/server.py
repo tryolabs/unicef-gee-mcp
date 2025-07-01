@@ -60,7 +60,6 @@ def get_dataset_image(
     if dataset not in load_all_datasets(config.path_to_metadata):
         available_datasets = load_all_datasets(config.path_to_metadata)
         msg = f"Invalid dataset '{dataset}'. Available datasets: {available_datasets}"
-        logger.error(msg)
         raise ValueError(msg)
 
     res = handle_get_dataset_image(dataset, config.path_to_metadata)
