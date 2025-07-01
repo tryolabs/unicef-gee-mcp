@@ -1,3 +1,6 @@
 server:
   port: 6002
   transport: "sse" # one of "stdio", "sse", "streamable-http"
+
+path_to_metadata: "ee_mcp/hazards_metadata.yaml"
+path_to_ee_auth: "ee_auth.json"

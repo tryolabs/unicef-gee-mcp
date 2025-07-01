@@ -42,7 +42,9 @@ def load_config(config_path: Path | None = None) -> Config:
         server=ServerConfig(
             port=config_data["server"]["port"],
             transport=transport,
-        )
+        ),
+        path_to_metadata=Path(config_data["path_to_metadata"]),
+        path_to_ee_auth=Path(config_data["path_to_ee_auth"]),
     )
 
 

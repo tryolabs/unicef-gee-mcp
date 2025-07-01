@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import yaml
 
@@ -15,14 +15,27 @@ class ServerConfig:
 @dataclass
 class Config:
     server: ServerConfig
+    path_to_metadata: Path
+    path_to_ee_auth: Path
 
 
-def load_all_datasets_enum() -> Enum | None:
+@dataclass
+class DatasetMetadata:
+    image_filename: str
+    asset_id: str
+    description: str
+    source_name: str
+    source_url: str
+    mosaic: bool = False
+    threshold: float | None = None
+    input_arguments: dict[str, Any] | None = None
+    color_palette: list[str] | None = None
+
+
+def load_all_datasets_enum(path_to_metadata: Path) -> Enum | None:
     """Load dataset names from the YAML metadata file and create enum values."""
-    from constants import PATH_TO_HAZARDS_METADATA
-
     try:
-        with Path(PATH_TO_HAZARDS_METADATA).open("r") as file:
+        with path_to_metadata.open("r") as file:
             data = yaml.safe_load(file)
             if data and "datasets" in data:
                 dataset_names = list(data["datasets"].keys())
