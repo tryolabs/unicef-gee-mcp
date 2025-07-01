@@ -1,6 +1,7 @@
 from config import config
 from dotenv import load_dotenv
 from handlers import (
+    handle_filter_image_by_threshold,
     handle_get_all_datasets_and_metadata,
     handle_get_dataset_image,
     handle_mask_image,
@@ -99,6 +100,41 @@ def mask_image(
     image_json = safe_json_loads(image_json)
     mask_image_json = safe_json_loads(mask_image_json)
     res = handle_mask_image(image_json, mask_image_json)
+    return {"image_json": res}
+
+
+@mcp.tool(name="filter_image_by_threshold")
+@add_input_args_to_result
+def filter_image_by_threshold(
+    image_json: str,
+    threshold: float,
+) -> dict[str, str]:
+    """Filter an Earth Engine image based on a threshold value.
+
+    This function applies a threshold filter to an image.
+    The result is a binary image where the values are either 0 or 1.
+
+    Args:
+        image_json: JSON string of the Earth Engine image
+        threshold: Numeric value to use as the threshold for filtering
+
+    Returns:
+        dict: A dictionary containing:
+            - image_json: JSON string of the filtered Earth Engine image
+            - input_arguments: The original input arguments used for the operation
+
+    Raises:
+        TypeError: If the loaded data is not an Earth Engine Image object
+
+    Use case:
+        Identify hazard areas with values above a threshold.
+        filter_image_by_threshold("temperature_data.json", 35.0)
+
+    Note:
+        Do not provide a value for temp_dir, it will be handled automatically.
+    """
+    image_json = safe_json_loads(image_json)
+    res = handle_filter_image_by_threshold(image_json, threshold)
     return {"image_json": res}
 
 

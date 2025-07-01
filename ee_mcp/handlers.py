@@ -2,6 +2,7 @@ from pathlib import Path
 
 from datasets import load_datasets_metadata
 from ee.deserializer import fromJSON
+from ee.ee_number import Number
 from ee.image import Image
 from ee.imagecollection import ImageCollection
 from schemas import DatasetMetadata
@@ -72,18 +73,32 @@ def handle_mask_image(image_json: str, mask_image_json: str) -> str:
     Returns:
         dict: A dictionary containing:
             - image_json: JSON string of the masked Earth Engine image
-
-    Use case:
-        Get the zone of exposed children to a hazard.
-        mask_image(
-            "child_population_data.json",
-            "hazard_data.json",
-        )
-
-    Note:
-        Do not provide a value for temp_dir, it will be handled automatically.
     """
     image = fromJSON(image_json)
     mask = fromJSON(mask_image_json)
     masked_image = image.updateMask(mask)
     return masked_image.serialize()
+
+
+def handle_filter_image_by_threshold(image_json: str, threshold: float) -> str:
+    """Filter an Earth Engine image based on a threshold value.
+
+    Args:
+        image_json: JSON string of the Earth Engine image
+        threshold: Numeric value to use as the threshold for filtering
+
+    Returns:
+        dict: A dictionary containing:
+            - image_json: JSON string of the filtered Earth Engine image
+            - input_arguments: The original input arguments used for the operation
+
+    Raises:
+        TypeError: If the loaded data is not an Earth Engine Image object
+    """
+    image = fromJSON(image_json)
+
+    # Create a mask where values are less than threshold
+    threshold_ee = Number(threshold)
+    filtered_mask = image.lt(threshold_ee) if threshold < 0 else image.gt(threshold_ee)
+
+    return filtered_mask.serialize()
