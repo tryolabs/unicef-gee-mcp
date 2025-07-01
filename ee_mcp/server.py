@@ -1,3 +1,5 @@
+from typing import Any
+
 from config import config
 from dotenv import load_dotenv
 from handlers import (
@@ -16,7 +18,7 @@ from initialize import initialize_ee, load_all_datasets
 from logging_config import get_logger
 from mcp.server.fastmcp import FastMCP
 from schemas import AREA_TYPES, REDUCERS, DatasetMetadata
-from utils import add_input_args_to_result, safe_json_loads
+from utils import safe_json_loads
 
 load_dotenv(override=True)
 
@@ -39,7 +41,6 @@ def get_all_datasets_and_metadata() -> dict[str, dict[str, DatasetMetadata]]:
 
 
 @mcp.tool(name="get_dataset_image_and_metadata")
-@add_input_args_to_result
 def get_dataset_image(
     dataset: str,
 ) -> dict[str, DatasetMetadata | str | dict[str, str]]:
@@ -67,10 +68,9 @@ def get_dataset_image(
 
 
 @mcp.tool(name="mask_image")
-@add_input_args_to_result
 def mask_image(
-    image_json: str,
-    mask_image_json: str,
+    image_json: str | dict[str, Any],
+    mask_image_json: str | dict[str, Any],
 ) -> dict[str, str | dict[str, str]]:
     """Mask an Earth Engine image based on a mask.
 
@@ -102,16 +102,15 @@ def mask_image(
             hazard_data_json,
         )
     """
-    image_json = safe_json_loads(image_json)
-    mask_image_json = safe_json_loads(mask_image_json)
+    image_json = safe_json_loads(str(image_json))
+    mask_image_json = safe_json_loads(str(mask_image_json))
     res = handle_mask_image(image_json, mask_image_json)
     return {"image_json": res}
 
 
 @mcp.tool(name="filter_image_by_threshold")
-@add_input_args_to_result
 def filter_image_by_threshold(
-    image_json: str,
+    image_json: str | dict[str, Any],
     threshold: float,
 ) -> dict[str, str | dict[str, str]]:
     """Filter an Earth Engine image based on a threshold value.
@@ -135,13 +134,12 @@ def filter_image_by_threshold(
         Identify hazard areas with values above a threshold.
         filter_image_by_threshold(temperature_data_json, 35.0)
     """
-    image_json = safe_json_loads(image_json)
+    image_json = safe_json_loads(str(image_json))
     res = handle_filter_image_by_threshold(image_json, threshold)
     return {"image_json": res}
 
 
 @mcp.tool(name="union_binary_images")
-@add_input_args_to_result
 def union_binary_images(
     binary_images_jsons: list[str],
 ) -> dict[str, str | dict[str, str]]:
@@ -172,7 +170,6 @@ def union_binary_images(
 
 
 @mcp.tool(name="intersect_binary_images")
-@add_input_args_to_result
 def intersect_binary_images(
     binary_images_jsons: list[str],
 ) -> dict[str, str | dict[str, str]]:
@@ -203,7 +200,6 @@ def intersect_binary_images(
 
 
 @mcp.tool(name="intersect_feature_collections")
-@add_input_args_to_result
 def intersect_feature_collections(
     feature_collections_jsons: list[str],
 ) -> dict[str, str | dict[str, str]]:
@@ -241,7 +237,6 @@ def intersect_feature_collections(
 
 
 @mcp.tool(name="merge_feature_collections")
-@add_input_args_to_result
 def merge_feature_collections(
     feature_collections_jsons: list[str],
 ) -> dict[str, str | dict[str, str]]:
@@ -277,10 +272,9 @@ def merge_feature_collections(
 
 
 @mcp.tool(name="reduce_image")
-@add_input_args_to_result
 def reduce_image(
-    image_json: str,
-    feature_collection_json: str,
+    image_json: str | dict[str, Any],
+    feature_collection_json: str | dict[str, Any],
     reducer: REDUCERS,
     scale: float = 92.76624195666344,  # scale of child population data,
 ) -> dict[str, float | dict[str, float]]:
@@ -302,14 +296,13 @@ def reduce_image(
     Note:
         Do not provide a value for temp_dir, it will be handled automatically.
     """
-    image_json = safe_json_loads(image_json)
-    feature_collection_json = safe_json_loads(feature_collection_json)
+    image_json = safe_json_loads(str(image_json))
+    feature_collection_json = safe_json_loads(str(feature_collection_json))
     res = handle_reduce_image(image_json, feature_collection_json, reducer, scale)
     return {"aggregation_result": res}
 
 
 @mcp.tool(name="get_zone_of_area")
-@add_input_args_to_result
 def get_zone_of_area(
     area_name: str,
     area_type: AREA_TYPES,

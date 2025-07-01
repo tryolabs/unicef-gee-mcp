@@ -1,0 +1,1 @@
+{"result": "0", "values": {"0": {"functionInvocationValue": {"functionName": "ImageCollection.mosaic", "arguments": {"collection": {"functionInvocationValue": {"functionName": "ImageCollection.load", "arguments": {"id": {"constantValue": "projects/unicef-ccri/assets/coastal_flood_r100"}}}}}}}}}
