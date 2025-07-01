@@ -132,3 +132,4 @@ cython_debug/
 /logs/
 
 .personal_workspace/
+ee_auth.json
