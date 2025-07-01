@@ -9,7 +9,8 @@ from ee.feature import Feature
 from ee.featurecollection import FeatureCollection
 from ee.image import Image
 from ee.imagecollection import ImageCollection
-from schemas import DatasetMetadata
+from ee.reducer import Reducer
+from schemas import REDUCERS, DatasetMetadata
 
 
 def handle_get_all_datasets_and_metadata(
@@ -223,3 +224,41 @@ def intersect_feature(feature: Feature, feature_collection: FeatureCollection) -
     """
     intersected = feature.geometry().intersection(feature_collection.geometry(), ErrorMargin(100))
     return Feature(Feature(intersected).copyProperties(feature))
+
+
+def handle_reduce_image(
+    image_json: str,
+    feature_collection_json: str,
+    reducer: REDUCERS,
+    scale: float = 92.76624195666344,  # scale of child population data
+) -> float:
+    """Reduce an image by applying a reducer to its pixels within specified regions.
+
+    Args:
+        image_json: The JSON string of the image to reduce
+        feature_collection_json: The JSON string of the geometry to reduce the image to
+        reducer: The reducer to apply
+        scale: The scale of the image. It should be 100 unless otherwise specified.
+
+    Returns:
+        float: The reduced value
+    """
+    image: Image = fromJSON(image_json)
+    feature_collection: FeatureCollection = fromJSON(feature_collection_json)
+    reduced = image.reduceRegions(
+        reducer=getattr(Reducer, reducer)(),
+        collection=feature_collection,
+        scale=scale,
+        crs="EPSG:4326",
+    )
+    stats = reduced.getInfo()
+
+    if stats is None:
+        msg = "No statistics found"
+        raise ValueError(msg)
+
+    aggregation_result = 0
+    for feature in stats["features"]:
+        aggregation_result += feature["properties"][reducer]
+
+    return aggregation_result

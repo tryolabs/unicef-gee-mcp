@@ -8,12 +8,13 @@ from handlers import (
     handle_intersect_feature_collections,
     handle_mask_image,
     handle_merge_feature_collections,
+    handle_reduce_image,
     handle_union_binary_images,
 )
 from initialize import initialize_ee, load_all_datasets
 from logging_config import get_logger
 from mcp.server.fastmcp import FastMCP
-from schemas import DatasetMetadata
+from schemas import REDUCERS, DatasetMetadata
 from utils import add_input_args_to_result, safe_json_loads
 
 load_dotenv(override=True)
@@ -269,6 +270,38 @@ def merge_feature_collections(feature_collections_jsons: list[str]) -> dict[str,
 
     res = handle_merge_feature_collections(feature_collections_jsons)
     return {"feature_collection_json": res}
+
+
+@mcp.tool(name="reduce_image")
+@add_input_args_to_result
+def reduce_image(
+    image_json: str,
+    feature_collection_json: str,
+    reducer: REDUCERS,
+    scale: float = 92.76624195666344,  # scale of child population data,
+) -> dict[str, float]:
+    """Reduce an image by applying a reducer to its pixels within specified regions.
+
+    Args:
+        image_json: The JSON string of the image to reduce
+        feature_collection_json: The JSON string of the geometry to reduce the image to
+        reducer: The reducer to apply
+        scale: The scale of the image. It should be 100 unless otherwise specified.
+
+    Returns:
+        float: The reduced value
+
+    Use case:
+        Calculate the average rainfall within specific administrative boundaries:
+        reduce_image("rainfall_data.json", "admin_boundaries.json", REDUCERS.MEAN)
+
+    Note:
+        Do not provide a value for temp_dir, it will be handled automatically.
+    """
+    image_json = safe_json_loads(image_json)
+    feature_collection_json = safe_json_loads(feature_collection_json)
+    res = handle_reduce_image(image_json, feature_collection_json, reducer, scale)
+    return {"aggregation_result": res}
 
 
 if __name__ == "__main__":
