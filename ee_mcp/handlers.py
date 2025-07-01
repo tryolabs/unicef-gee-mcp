@@ -1,8 +1,12 @@
 from pathlib import Path
+from typing import cast
 
 from datasets import load_datasets_metadata
 from ee.deserializer import fromJSON
 from ee.ee_number import Number
+from ee.errormargin import ErrorMargin
+from ee.feature import Feature
+from ee.featurecollection import FeatureCollection
 from ee.image import Image
 from ee.imagecollection import ImageCollection
 from schemas import DatasetMetadata
@@ -143,3 +147,79 @@ def handle_intersect_binary_images(
         intersection = intersection.And(new_data)
 
     return intersection.serialize()
+
+
+def handle_intersect_feature_collections(feature_collections_jsons: list[str]) -> str:
+    """Perform a geometric intersection of multiple feature collections.
+
+    Args:
+        feature_collections_jsons: List of JSON strings of the feature collections to intersect.
+            Each JSON should point to a valid Earth Engine FeatureCollection.
+
+    Returns:
+        str: JSON string of the intersection result
+
+    Raises:
+        ValueError: If no feature collections are provided or if any input is an Image
+    """
+    intersection = fromJSON(feature_collections_jsons[0])
+    if isinstance(intersection, Image):
+        msg = "Image cannot be intersected"
+        raise TypeError(msg)
+
+    for path in feature_collections_jsons[1:]:
+        new_fc = fromJSON(path)
+        if isinstance(new_fc, Image):
+            msg = "Image cannot be intersected"
+            raise TypeError(msg)
+        intersection = intersection.map(
+            lambda f, fc=new_fc: intersect_feature(cast("Feature", f), fc)
+        )
+
+    return intersection.serialize()
+
+
+def handle_merge_feature_collections(feature_collections_jsons: list[str]) -> str:
+    """Merge multiple feature collections into a single combined collection.
+
+    Args:
+        feature_collections_jsons: List of JSON strings of the feature collections to merge.
+            Each JSON should point to a valid Earth Engine FeatureCollection.
+
+    Returns:
+        str: JSON string of the merged result
+
+    Raises:
+        ValueError: If no feature collections are provided or if any input is an Image
+    """
+    union = fromJSON(feature_collections_jsons[0])
+    if isinstance(union, Image):
+        msg = "Image cannot be unioned"
+        raise TypeError(msg)
+
+    for path in feature_collections_jsons[1:]:
+        new_data = fromJSON(path)
+        if isinstance(new_data, Image):
+            msg = "Image cannot be unioned"
+            raise TypeError(msg)
+        union = union.merge(new_data).union()
+
+    return union.serialize()
+
+
+def intersect_feature(feature: Feature, feature_collection: FeatureCollection) -> Feature:
+    """Intersect a feature with a feature collection.
+
+    Computes the geometric intersection between a feature and a feature collection,
+    preserving the properties of the input feature.
+
+    Args:
+        feature: The feature to intersect
+        feature_collection: The feature collection to intersect with
+
+    Returns:
+        Feature: A new feature representing the intersection, with properties copied from
+                the input feature
+    """
+    intersected = feature.geometry().intersection(feature_collection.geometry(), ErrorMargin(100))
+    return Feature(Feature(intersected).copyProperties(feature))

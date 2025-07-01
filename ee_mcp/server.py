@@ -5,7 +5,9 @@ from handlers import (
     handle_get_all_datasets_and_metadata,
     handle_get_dataset_image,
     handle_intersect_binary_images,
+    handle_intersect_feature_collections,
     handle_mask_image,
+    handle_merge_feature_collections,
     handle_union_binary_images,
 )
 from initialize import initialize_ee, load_all_datasets
@@ -50,7 +52,7 @@ def get_dataset_image(
 
     Use case:
         Retrieve a global agricultural drought dataset to analyze drought conditions:
-        get_dataset_image_and_metadata("agricultural_drought")
+        get_dataset_image("agricultural_drought")
     """
     dataset = dataset.lower()
     if dataset not in load_all_datasets(config.path_to_metadata):
@@ -95,8 +97,8 @@ def mask_image(
     Use case:
         Get the zone of exposed children to a hazard.
         mask_image(
-            "child_population_data.json",
-            "hazard_data.json",
+            child_population_data_json,
+            hazard_data_json,
         )
     """
     image_json = safe_json_loads(image_json)
@@ -130,10 +132,7 @@ def filter_image_by_threshold(
 
     Use case:
         Identify hazard areas with values above a threshold.
-        filter_image_by_threshold("temperature_data.json", 35.0)
-
-    Note:
-        Do not provide a value for temp_dir, it will be handled automatically.
+        filter_image_by_threshold(temperature_data_json, 35.0)
     """
     image_json = safe_json_loads(image_json)
     res = handle_filter_image_by_threshold(image_json, threshold)
@@ -162,10 +161,7 @@ def union_binary_images(
 
     Use case:
         Union two binary images to find areas that are either hazard zones.
-        union_binary_images(["flood_zones.json", "drought_zones.json"])
-
-    Note:
-        Do not provide a value for temp_dir, it will be handled automatically.
+        union_binary_images([flood_zones_json, drought_zones_json])
     """
     for i, image_json in enumerate(binary_images_jsons):
         binary_images_jsons[i] = safe_json_loads(image_json)
@@ -196,16 +192,83 @@ def intersect_binary_images(
 
     Use case:
         Intersect two binary images to find areas that are both hazard zones.
-        intersect_binary_images(["flood_zones.json", "drought_zones.json"])
-
-    Note:
-        Do not provide a value for temp_dir, it will be handled automatically.
+        intersect_binary_images([flood_zones_json, drought_zones_json])
     """
     for i, image_json in enumerate(binary_images_jsons):
         binary_images_jsons[i] = safe_json_loads(image_json)
 
     res = handle_intersect_binary_images(binary_images_jsons)
     return {"image_json": res}
+
+
+@mcp.tool(name="intersect_feature_collections")
+@add_input_args_to_result
+def intersect_feature_collections(feature_collections_jsons: list[str]) -> dict[str, str]:
+    """Perform a geometric intersection of multiple feature collections.
+
+    This function loads feature collections from the provided paths and performs
+    a geometric intersection operation, returning features that exist in all collections.
+
+    Note: This operation only works with vector data (feature collections).
+    Images cannot be intersected using this method.
+
+    Args:
+        feature_collections_jsons: List of JSON strings of the feature collections to intersect.
+            Each JSON should point to a valid Earth Engine FeatureCollection.
+            All inputs must be vector data (feature collections), not images.
+
+    Returns:
+        dict: A dictionary containing:
+            - feature_collection_json: JSON string of the intersection result
+            - input_arguments: The original input arguments used for the operation
+
+    Raises:
+        TypeError: If any input is an Image
+
+    Use case:
+        Find areas that are both flood-prone and densely populated by intersecting flood
+        hazard zones with population density data:
+        intersect_feature_collections([flood_zones_json, high_population_areas_json])
+    """
+    for i, feature_collection_json in enumerate(feature_collections_jsons):
+        feature_collections_jsons[i] = safe_json_loads(feature_collection_json)
+
+    res = handle_intersect_feature_collections(feature_collections_jsons)
+    return {"feature_collection_json": res}
+
+
+@mcp.tool(name="merge_feature_collections")
+@add_input_args_to_result
+def merge_feature_collections(feature_collections_jsons: list[str]) -> dict[str, str]:
+    """Merge multiple feature collections into a single combined collection.
+
+    This function loads feature collections from the provided paths and merges them
+    into a single feature collection containing all features from the input collections.
+
+    Note: This operation only works with vector data (feature collections).
+    Images cannot be merged using this method.
+
+    Args:
+        feature_collections_jsons: List of JSON strings of the feature collections to merge.
+            Each JSON should point to a valid Earth Engine FeatureCollection.
+
+    Returns:
+        dict: A dictionary containing:
+            - feature_collection_json: JSON string of the merged result
+            - input_arguments: The original input arguments used for the operation
+
+    Raises:
+        TypeError: If any input is an Image
+
+    Use case:
+        Combine different country areas into a single feature collection.
+        merge_feature_collections([uruguay_json, argentina_json])
+    """
+    for i, feature_collection_json in enumerate(feature_collections_jsons):
+        feature_collections_jsons[i] = safe_json_loads(feature_collection_json)
+
+    res = handle_merge_feature_collections(feature_collections_jsons)
+    return {"feature_collection_json": res}
 
 
 if __name__ == "__main__":
