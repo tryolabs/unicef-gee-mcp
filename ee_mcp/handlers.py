@@ -1,12 +1,27 @@
 from pathlib import Path
 from typing import Any
 
-from datasets import get_dataset_metadata
+from datasets import load_datasets_metadata
 from ee.image import Image
 from ee.imagecollection import ImageCollection
+from schemas import DatasetMetadata
 
 
-def handle_get_dataset_image_and_metadata(
+def handle_get_all_datasets_and_metadata(
+    path_to_metadata: Path,
+) -> dict[str, DatasetMetadata]:
+    """Get all available datasets names and metadata.
+
+    Args:
+        path_to_metadata: Path to the metadata YAML file
+
+    Returns:
+        A dictionary containing the metadata and JSON representation of the image.
+    """
+    return load_datasets_metadata(path_to_metadata)
+
+
+def handle_get_dataset_image(
     dataset: str,
     path_to_metadata: Path,
 ) -> dict[str, Any]:
@@ -35,7 +50,7 @@ def handle_get_dataset_image_and_metadata(
         Retrieve a global agricultural drought dataset to analyze drought conditions:
         get_dataset_image_and_metadata("agricultural_drought")
     """
-    metadata = get_dataset_metadata(dataset, path_to_metadata)
+    metadata = load_datasets_metadata(path_to_metadata)[dataset]
 
     if metadata.mosaic:
         image = ImageCollection(metadata.asset_id).mosaic()
@@ -45,6 +60,5 @@ def handle_get_dataset_image_and_metadata(
             image = image.updateMask(image.lte(100))
 
     return {
-        **metadata.__dict__,
         "image_json": image.serialize(),
     }
