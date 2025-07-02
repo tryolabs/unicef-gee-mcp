@@ -20,7 +20,7 @@ build-backend = "hatchling.build"
 # Adding the current directory to the Python path so that pytest can find the modules to test.
 # Directories will be added to the head of sys.path
 # Docs relevant to this step: https://docs.pytest.org/en/7.1.x/reference/reference.html#confval-pythonpath
-pythonpath = "."
+pythonpath = [".", "ee_mcp"]
 testpaths = ["tests"]
 
 [dependency-groups]

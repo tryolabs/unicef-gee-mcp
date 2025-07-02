@@ -4,7 +4,7 @@
   //
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
   "python.analysis.extraPaths": [
-    "${workspaceFolder}/ee_mcp"
+    "${workspaceFolder}/ee_mcp",
   ],
   //
   // Hide .venv from explorer and searchbar

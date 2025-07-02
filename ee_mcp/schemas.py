@@ -2,11 +2,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
+Transport = Literal["stdio", "sse", "streamable-http"]
+
 
 @dataclass
 class ServerConfig:
     port: int
-    transport: Literal["stdio", "sse", "streamable-http"]
+    transport: Transport
 
 
 @dataclass

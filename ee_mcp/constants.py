@@ -1,0 +1,3 @@
+BASE_ASSETS_PATH = "projects/unicef-ccri/assets"
+COUNTRY_BOUNDRIES_DATASET = f"{BASE_ASSETS_PATH}/adm0_wfp"
+ADMIN_LEVEL_1_BOUNDRIES_DATASET = "WM/geoLab/geoBoundaries/600/ADM1"

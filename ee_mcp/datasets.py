@@ -1,9 +1,8 @@
 from pathlib import Path
 
 import yaml
+from constants import BASE_ASSETS_PATH
 from schemas import DatasetMetadata
-
-BASE_ASSETS_PATH = "projects/unicef-ccri/assets"
 
 
 def load_datasets_metadata(path_to_metadata: Path) -> dict[str, DatasetMetadata]:
@@ -31,8 +30,14 @@ def load_datasets_metadata(path_to_metadata: Path) -> dict[str, DatasetMetadata]
 
                 metadata[dataset_name] = DatasetMetadata(**dataset_config)
 
-    except (FileNotFoundError, yaml.YAMLError, ValueError) as e:
-        msg = f"Error loading datasets metadata: {e}"
+    except FileNotFoundError as e:
+        msg = f"Metadata file does not exist: {e}"
+        raise FileNotFoundError(msg) from e
+    except yaml.YAMLError as e:
+        msg = f"Error parsing YAML file: {e}"
+        raise yaml.YAMLError(msg) from e
+    except ValueError as e:
+        msg = f"Invalid YAML structure or missing required keys: {e}"
         raise ValueError(msg) from e
 
     return metadata

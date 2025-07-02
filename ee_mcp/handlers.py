@@ -3,6 +3,7 @@ from typing import cast
 
 import ee
 import pycountry
+from constants import ADMIN_LEVEL_1_BOUNDRIES_DATASET, COUNTRY_BOUNDRIES_DATASET
 from datasets import load_datasets_metadata
 from ee.deserializer import fromJSON
 from ee.ee_number import Number
@@ -15,9 +16,6 @@ from ee.imagecollection import ImageCollection
 from ee.reducer import Reducer
 from schemas import AREA_TYPES, REDUCERS, DatasetMetadata
 
-BASE_ASSETS_PATH = "projects/unicef-ccri/assets"
-COUNTRY_BOUNDRIES_DATASET = f"{BASE_ASSETS_PATH}/adm0_wfp"
-ADMIN_LEVEL_1_BOUNDRIES_DATASET = "WM/geoLab/geoBoundaries/600/ADM1"
 TH_SHAPE_AREA = 33
 
 
@@ -52,7 +50,12 @@ def handle_get_dataset_image(
         Retrieve a global agricultural drought dataset to analyze drought conditions:
         get_dataset_image_and_metadata("agricultural_drought")
     """
-    metadata = load_datasets_metadata(path_to_metadata)[dataset]
+    try:
+        metadata = load_datasets_metadata(path_to_metadata)[dataset]
+    except KeyError as err:
+        available_datasets = list(load_datasets_metadata(path_to_metadata).keys())
+        msg = f"Invalid dataset '{dataset}'. Available datasets: {available_datasets}"
+        raise KeyError(msg) from err
 
     if metadata.mosaic:
         image = ImageCollection(metadata.asset_id).mosaic()
