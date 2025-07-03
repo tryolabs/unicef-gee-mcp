@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, get_args
 
 from config import config
 from dotenv import load_dotenv
@@ -296,6 +296,11 @@ def reduce_image(
     Note:
         Do not provide a value for temp_dir, it will be handled automatically.
     """
+    if reducer not in get_args(REDUCERS):
+        available_reducers = get_args(REDUCERS)
+        msg = f"Invalid reducer: {reducer}. Available reducers: {available_reducers}"
+        raise ValueError(msg)
+
     image_json = safe_json_loads(str(image_json))
     feature_collection_json = safe_json_loads(str(feature_collection_json))
     res = handle_reduce_image(image_json, feature_collection_json, reducer, scale)
@@ -307,10 +312,10 @@ def get_zone_of_area(
     area_name: str,
     area_type: AREA_TYPES,
 ) -> dict[str, str | dict[str, str]]:
-    """Get the zone boundary for a specified area and save it as a vector file.
+    """Get the zone boundary for a specified area and return it as a JSON string.
 
     Retrieves the boundary geometry for either a country or admin level 1 area from
-    Earth Engine and saves it as a GeoJSON file.
+    Earth Engine and returns it as a JSON string.
 
     Args:
         area_name: Name of the area to get boundary for.
@@ -320,17 +325,23 @@ def get_zone_of_area(
 
     Returns:
         dict[str, str]: A dictionary containing:
-            - zone_path: Path to the saved GeoJSON vector file
+            - zone_json: JSON string of the vector file
 
     Example:
         To get boundary data for France:
-        >>> zone_path = get_zone_of_area("France", "country")
+        >>> zone_json = get_zone_of_area("France", "country")
 
         To get boundary data for California:
-        >>> zone_path = get_zone_of_area("California", "admin1")
+        >>> zone_json = get_zone_of_area("California", "admin1")
     """
+    if area_type not in get_args(AREA_TYPES):
+        available_area_types = get_args(AREA_TYPES)
+        msg = f"Invalid area type: {area_type}. Available types: {available_area_types}"
+        raise ValueError(msg)
+
     res = handle_get_zone_of_area(area_name, area_type)
-    return {"zone_path": res}
+
+    return {"zone_json": res}
 
 
 if __name__ == "__main__":
