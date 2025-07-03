@@ -25,7 +25,7 @@ def load_config(config_path: Path | None = None) -> Config:
 
     if not config_path.exists():
         msg = "Configuration file not found: %s"
-        logger.error(msg, config_path)
+        logger.exception(msg, config_path)
         raise FileNotFoundError(msg, config_path)
 
     with config_path.open() as f:
@@ -35,7 +35,7 @@ def load_config(config_path: Path | None = None) -> Config:
     transport = config_data["server"]["transport"]
     if transport not in valid_transports:
         msg = "Invalid transport: %s. Must be one of %s"
-        logger.error(msg, transport, valid_transports)
+        logger.exception(msg, transport, valid_transports)
         raise ValueError(msg, transport, valid_transports)
 
     return Config(

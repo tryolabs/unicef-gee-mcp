@@ -15,7 +15,6 @@ from handlers import (
     handle_union_binary_images,
 )
 from initialize import initialize_ee, load_all_datasets
-from logging_config import get_logger
 from mcp.server.fastmcp import FastMCP
 from schemas import AREA_TYPES, REDUCERS, DatasetMetadata
 from utils import safe_json_loads
@@ -23,6 +22,11 @@ from utils import safe_json_loads
 load_dotenv(override=True)
 
 mcp = FastMCP("GEE MCP", port=config.server.port)
+
+# needs to be imported after mcp is initialized
+# https://github.com/modelcontextprotocol/python-sdk/issues/420
+from logging_config import get_logger  # noqa: E402
+
 initialize_ee(config.path_to_ee_auth)
 
 
@@ -36,7 +40,9 @@ def get_all_datasets_and_metadata() -> dict[str, dict[str, DatasetMetadata]]:
     Returns:
         A dictionary containing the metadata for all available datasets
     """
+    logger.info("Called get_all_datasets_and_metadata")
     res = handle_get_all_datasets_and_metadata(config.path_to_metadata)
+    logger.info("Returning %d datasets", len(res))
     return {"datasets": res}
 
 
@@ -57,13 +63,16 @@ def get_dataset_image(
         Retrieve a global agricultural drought dataset to analyze drought conditions:
         get_dataset_image("agricultural_drought")
     """
+    logger.info("Called get_dataset_image with dataset=%s", dataset)
     dataset = dataset.lower()
     if dataset not in load_all_datasets(config.path_to_metadata):
         available_datasets = load_all_datasets(config.path_to_metadata)
         msg = f"Invalid dataset '{dataset}'. Available datasets: {available_datasets}"
+        logger.exception(msg)
         raise ValueError(msg)
 
     res = handle_get_dataset_image(dataset, config.path_to_metadata)
+    logger.info("Successfully retrieved dataset image for %s", dataset)
     return {"image_json": res}
 
 
@@ -102,9 +111,11 @@ def mask_image(
             hazard_data_json,
         )
     """
+    logger.info("Called mask_image")
     image_json = safe_json_loads(str(image_json))
     mask_image_json = safe_json_loads(str(mask_image_json))
     res = handle_mask_image(image_json, mask_image_json)
+    logger.info("Successfully masked image")
     return {"image_json": res}
 
 
@@ -134,8 +145,10 @@ def filter_image_by_threshold(
         Identify hazard areas with values above a threshold.
         filter_image_by_threshold(temperature_data_json, 35.0)
     """
+    logger.info("Called filter_image_by_threshold with threshold=%s", threshold)
     image_json = safe_json_loads(str(image_json))
     res = handle_filter_image_by_threshold(image_json, threshold)
+    logger.info("Successfully filtered image by threshold %s", threshold)
     return {"image_json": res}
 
 
@@ -162,10 +175,12 @@ def union_binary_images(
         Union two binary images to find areas that are either hazard zones.
         union_binary_images([flood_zones_json, drought_zones_json])
     """
+    logger.info("Called union_binary_images with %d images", len(binary_images_jsons))
     for i, image_json in enumerate(binary_images_jsons):
         binary_images_jsons[i] = safe_json_loads(image_json)
 
     res = handle_union_binary_images(binary_images_jsons)
+    logger.info("Successfully performed union on %d binary images", len(binary_images_jsons))
     return {"image_json": res}
 
 
@@ -192,10 +207,12 @@ def intersect_binary_images(
         Intersect two binary images to find areas that are both hazard zones.
         intersect_binary_images([flood_zones_json, drought_zones_json])
     """
+    logger.info("Called intersect_binary_images with %d images", len(binary_images_jsons))
     for i, image_json in enumerate(binary_images_jsons):
         binary_images_jsons[i] = safe_json_loads(image_json)
 
     res = handle_intersect_binary_images(binary_images_jsons)
+    logger.info("Successfully performed intersection on %d binary images", len(binary_images_jsons))
     return {"image_json": res}
 
 
@@ -229,10 +246,18 @@ def intersect_feature_collections(
         hazard zones with population density data:
         intersect_feature_collections([flood_zones_json, high_population_areas_json])
     """
+    logger.info(
+        "Called intersect_feature_collections with %d feature collections",
+        len(feature_collections_jsons),
+    )
     for i, feature_collection_json in enumerate(feature_collections_jsons):
         feature_collections_jsons[i] = safe_json_loads(feature_collection_json)
 
     res = handle_intersect_feature_collections(feature_collections_jsons)
+    logger.info(
+        "Successfully performed intersection on %d feature collections",
+        len(feature_collections_jsons),
+    )
     return {"feature_collection_json": res}
 
 
@@ -264,10 +289,15 @@ def merge_feature_collections(
         Combine different country areas into a single feature collection.
         merge_feature_collections([uruguay_json, argentina_json])
     """
+    logger.info(
+        "Called merge_feature_collections with %d feature collections",
+        len(feature_collections_jsons),
+    )
     for i, feature_collection_json in enumerate(feature_collections_jsons):
         feature_collections_jsons[i] = safe_json_loads(feature_collection_json)
 
     res = handle_merge_feature_collections(feature_collections_jsons)
+    logger.info("Successfully merged %d feature collections", len(feature_collections_jsons))
     return {"feature_collection_json": res}
 
 
@@ -296,14 +326,17 @@ def reduce_image(
     Note:
         Do not provide a value for temp_dir, it will be handled automatically.
     """
+    logger.info("Called reduce_image with reducer=%s and scale=%s", reducer, scale)
     if reducer not in get_args(REDUCERS):
         available_reducers = get_args(REDUCERS)
         msg = f"Invalid reducer: {reducer}. Available reducers: {available_reducers}"
+        logger.exception(msg)
         raise ValueError(msg)
 
     image_json = safe_json_loads(str(image_json))
     feature_collection_json = safe_json_loads(str(feature_collection_json))
     res = handle_reduce_image(image_json, feature_collection_json, reducer, scale)
+    logger.info("Successfully reduced image with reducer %s, result: %s", reducer, res)
     return {"aggregation_result": res}
 
 
@@ -334,12 +367,15 @@ def get_zone_of_area(
         To get boundary data for California:
         >>> zone_json = get_zone_of_area("California", "admin1")
     """
+    logger.info("Called get_zone_of_area with area_name=%s and area_type=%s", area_name, area_type)
     if area_type not in get_args(AREA_TYPES):
         available_area_types = get_args(AREA_TYPES)
         msg = f"Invalid area type: {area_type}. Available types: {available_area_types}"
+        logger.exception(msg)
         raise ValueError(msg)
 
     res = handle_get_zone_of_area(area_name, area_type)
+    logger.info("Successfully retrieved zone for area %s of type %s", area_name, area_type)
 
     return {"zone_json": res}
 

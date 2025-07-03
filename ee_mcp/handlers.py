@@ -14,7 +14,10 @@ from ee.filter import Filter
 from ee.image import Image
 from ee.imagecollection import ImageCollection
 from ee.reducer import Reducer
+from logging_config import get_logger
 from schemas import AREA_TYPES, REDUCERS, DatasetMetadata
+
+logger = get_logger(__name__)
 
 TH_SHAPE_AREA = 33
 
@@ -30,7 +33,9 @@ def handle_get_all_datasets_and_metadata(
     Returns:
         dict[str, DatasetMetadata]: A dictionary containing the metadata for all datasets.
     """
-    return load_datasets_metadata(path_to_metadata)
+    metadata = load_datasets_metadata(path_to_metadata)
+    logger.info("Loaded %d datasets", len(metadata))
+    return metadata
 
 
 def handle_get_dataset_image(
@@ -52,16 +57,21 @@ def handle_get_dataset_image(
     """
     try:
         metadata = load_datasets_metadata(path_to_metadata)[dataset]
+        logger.debug("Found metadata for dataset %s: %s", dataset, metadata)
     except KeyError as err:
         available_datasets = list(load_datasets_metadata(path_to_metadata).keys())
         msg = f"Invalid dataset '{dataset}'. Available datasets: {available_datasets}"
+        logger.exception(msg)
         raise KeyError(msg) from err
 
     if metadata.mosaic:
+        logger.debug("Creating mosaic image for dataset %s", dataset)
         image = ImageCollection(metadata.asset_id).mosaic()
     else:
+        logger.debug("Creating single image for dataset %s", dataset)
         image = Image(metadata.asset_id)
         if dataset == "agricultural_drought":
+            logger.debug("Applying mask for agricultural drought dataset")
             image = image.updateMask(image.lte(100))
 
     return image.serialize()
@@ -119,7 +129,8 @@ def handle_union_binary_images(
     """
     # Unmask the image to ensure non-data is treated as 0
     union: Image = fromJSON(binary_images_jsons[0]).unmask(0)
-    for path in binary_images_jsons[1:]:
+    for i, path in enumerate(binary_images_jsons[1:], 1):
+        logger.debug("Processing image %d of %d for union", i + 1, len(binary_images_jsons))
         new_data: Image = fromJSON(path).unmask(0)
         union = union.Or(new_data)
 
@@ -139,7 +150,8 @@ def handle_intersect_binary_images(
         str: JSON string of the intersection result
     """
     intersection: Image = fromJSON(binary_images_jsons[0])
-    for path in binary_images_jsons[1:]:
+    for i, path in enumerate(binary_images_jsons[1:], 1):
+        logger.debug("Processing image %d of %d for intersection", i + 1, len(binary_images_jsons))
         new_data: Image = fromJSON(path)
         intersection = intersection.And(new_data)
 
@@ -162,12 +174,19 @@ def handle_intersect_feature_collections(feature_collections_jsons: list[str]) -
     intersection = fromJSON(feature_collections_jsons[0])
     if isinstance(intersection, Image):
         msg = "Image cannot be intersected"
+        logger.exception(msg)
         raise TypeError(msg)
 
-    for path in feature_collections_jsons[1:]:
+    for i, path in enumerate(feature_collections_jsons[1:], 1):
+        logger.debug(
+            "Processing feature collection %d of %d for intersection",
+            i + 1,
+            len(feature_collections_jsons),
+        )
         new_fc = fromJSON(path)
         if isinstance(new_fc, Image):
             msg = "Image cannot be intersected"
+            logger.exception(msg)
             raise TypeError(msg)
         intersection = intersection.map(
             lambda f, fc=new_fc: intersect_feature(cast("Feature", f), fc)
@@ -192,12 +211,19 @@ def handle_merge_feature_collections(feature_collections_jsons: list[str]) -> st
     union = fromJSON(feature_collections_jsons[0])
     if isinstance(union, Image):
         msg = "Image cannot be unioned"
+        logger.exception(msg)
         raise TypeError(msg)
 
-    for path in feature_collections_jsons[1:]:
+    for i, path in enumerate(feature_collections_jsons[1:], 1):
+        logger.debug(
+            "Processing feature collection %d of %d for merge",
+            i + 1,
+            len(feature_collections_jsons),
+        )
         new_data = fromJSON(path)
         if isinstance(new_data, Image):
             msg = "Image cannot be unioned"
+            logger.exception(msg)
             raise TypeError(msg)
         union = union.merge(new_data).union()
 
@@ -250,13 +276,17 @@ def handle_reduce_image(
         scale=scale,
         crs="EPSG:4326",
     )
+    logger.debug("Getting statistics from reduced regions")
     stats = reduced.getInfo()
 
     if stats is None:
         msg = "No statistics found"
+        logger.exception(msg)
         raise ValueError(msg)
 
     aggregation_result = 0
+    feature_count = len(stats["features"])
+    logger.debug("Processing %d features for aggregation", feature_count)
     for feature in stats["features"]:
         aggregation_result += feature["properties"][reducer]
 
@@ -277,6 +307,7 @@ def handle_get_zone_of_area(area_name: str, area_type: AREA_TYPES) -> str:
     """
     if area_type == "country":
         area_name = get_country_code(area_name)
+        logger.debug("Using country code: %s", area_name)
         countries_boundries = FeatureCollection(COUNTRY_BOUNDRIES_DATASET)
 
         area_boundry = countries_boundries.filter(Filter.eq("iso3", area_name))
@@ -290,6 +321,7 @@ def handle_get_zone_of_area(area_name: str, area_type: AREA_TYPES) -> str:
         area_boundry = FeatureCollection(area_boundry.geometry().simplify(simplification_tolerance))
 
     else:
+        logger.debug("Using admin level 1 boundaries for area: %s", area_name)
         admin_level_1_boundries = FeatureCollection(ADMIN_LEVEL_1_BOUNDRIES_DATASET)
         area_boundry = admin_level_1_boundries.filter(Filter.eq("shapeName", area_name))
 
@@ -316,10 +348,13 @@ def standarize_country_name(country: str) -> str:
             or pycountry.countries.get(alpha_3=country)
         )
         if country_obj:
+            logger.debug("Found standardized country name: %s", country_obj.name)
             return country_obj.name
         else:
+            logger.debug("Country not found in pycountry, returning original: %s", country)
             return country
     except KeyError:
+        logger.debug("KeyError occurred, returning original country name: %s", country)
         return country
 
 
@@ -338,8 +373,11 @@ def get_country_code(country: str) -> str:
         country = standarize_country_name(country)
         country_obj = pycountry.countries.get(name=country)
         if country_obj:
+            logger.debug("Found country code: %s", country_obj.alpha_3)
             return country_obj.alpha_3
         else:
+            logger.debug("Country code not found, returning original: %s", country)
             return country
     except KeyError:
+        logger.debug("KeyError occurred, returning original country: %s", country)
         return country
