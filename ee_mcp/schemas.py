@@ -7,6 +7,7 @@ Transport = Literal["stdio", "sse", "streamable-http"]
 
 @dataclass
 class ServerConfig:
+    host: str
     port: int
     transport: Transport
 

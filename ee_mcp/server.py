@@ -21,7 +21,7 @@ from utils import safe_json_loads
 
 load_dotenv(override=True)
 
-mcp = FastMCP("GEE MCP", port=config.server.port)
+mcp = FastMCP("GEE MCP", host=config.server.host, port=config.server.port)
 
 # needs to be imported after mcp is initialized
 # https://github.com/modelcontextprotocol/python-sdk/issues/420
@@ -381,4 +381,4 @@ def get_zone_of_area(
 
 
 if __name__ == "__main__":
-    mcp.run(config.server.transport)
+    mcp.run(config.server.transport)  # type: ignore[call-arg]

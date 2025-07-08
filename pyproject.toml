@@ -4,7 +4,6 @@ version = "0.1.0"
 description = ""
 authors = [{ name = "Federico Bello", email = "fe.debello13@gmail.com" }]
 requires-python = "~=3.11"
-readme = "README.md"
 dependencies = [
     "earthengine-api>=1.5.21",
     "json-repair>=0.47.5",

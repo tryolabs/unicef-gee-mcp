@@ -40,6 +40,7 @@ def load_config(config_path: Path | None = None) -> Config:
 
     return Config(
         server=ServerConfig(
+            host=config_data["server"]["host"],
             port=config_data["server"]["port"],
             transport=transport,
         ),
