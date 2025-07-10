@@ -5,11 +5,14 @@ description = ""
 authors = [{ name = "Federico Bello", email = "fe.debello13@gmail.com" }]
 requires-python = "~=3.11"
 dependencies = [
+    "geemap @ git+https://github.com/gee-community/geemap.git",
     "earthengine-api>=1.5.21",
     "json-repair>=0.47.5",
     "mcp[cli]>=1.10.1",
     "numpy>=2.3.1",
     "pycountry>=24.6.1",
+    "setuptools>=80.9.0",
+    "xyzservices @ git+https://github.com/geopandas/xyzservices.git",
 ]
 
 [build-system]
@@ -239,3 +242,6 @@ allow-star-arg-any = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["gee_mcp"]
+
+[tool.hatch.metadata]
+allow-direct-references = true

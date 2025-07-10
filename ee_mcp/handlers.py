@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import cast
 
 import ee
+import geemap.foliumap as geemap
 import pycountry
 from constants import ADMIN_LEVEL_1_BOUNDRIES_DATASET, COUNTRY_BOUNDRIES_DATASET
 from datasets import load_datasets_metadata
@@ -381,3 +382,68 @@ def get_country_code(country: str) -> str:
     except KeyError:
         logger.debug("KeyError occurred, returning original country: %s", country)
         return country
+
+
+def handle_build_map(
+    images_json: list[str],
+    feature_collection_json: str,
+    color_palettes: list[list[str]],
+    names: list[str],
+) -> str:
+    """Build a map from images and vector data and save it to an HTML file.
+
+    Args:
+        images_json: List of JSON strings of the Earth Engine images to display on the map
+        feature_collection_json: JSON string of the vector data (e.g. GeoJSON) defining the
+            boundaries to overlay the images on
+        color_palettes: List of color palettes to use for each image layer. Each palette should
+            be a list of color strings (e.g. ["#ff0000", "#00ff00"])
+        names: List of names for each image layer. Must match length of images_json.
+
+    Returns:
+        str: The filename of the saved HTML map file
+    """
+    # Deserialize the JSON strings to Earth Engine objects
+    images = [fromJSON(image_json) for image_json in images_json]
+    vector_data = fromJSON(feature_collection_json)
+
+    demographic_map = geemap.Map(basemap="UN.ClearMap")
+
+    default_color_palette = ["#F4E7E1", "#FF9B45", "#D5451B", "#521C0D"]
+
+    for i, image in enumerate(images):
+        logger.info("Adding layer %s", names[i])
+        clipped_image = image.clip(vector_data)
+        # Apply mask to show only non-zero values
+        masked_image: Image = clipped_image.updateMask(clipped_image.gt(0))
+
+        max_value = list(
+            masked_image.reduceRegion(
+                reducer=Reducer.max(),
+                geometry=vector_data.geometry(),
+                scale=1000,
+                maxPixels=int(1e9),
+            )
+            .getInfo()
+            .values()  # type: ignore[misc]
+        )[0]
+
+        vis_params = {
+            "min": 0,
+            "max": max_value,
+            "palette": (color_palettes[i] if color_palettes[i] != [] else default_color_palette),
+        }
+
+        demographic_map.add_layer(masked_image, vis_params, names[i])  # type: ignore[misc]
+
+    demographic_map.center_object(vector_data, max_error=0.1)  # type: ignore[misc]
+
+    # Generate HTML string and return it
+    html_string = demographic_map.to_html()  # type: ignore[misc]
+
+    if html_string is None:
+        msg = "Failed to generate HTML string"
+        logger.exception(msg)
+        raise ValueError(msg)
+
+    return html_string

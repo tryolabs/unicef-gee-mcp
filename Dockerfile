@@ -1,5 +1,13 @@
 FROM python:3.11-slim
 
+# Install system dependencies including Git and Node.js
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install uv package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 

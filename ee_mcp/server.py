@@ -3,6 +3,7 @@ from typing import Any, get_args
 from config import config
 from dotenv import load_dotenv
 from handlers import (
+    handle_build_map,
     handle_filter_image_by_threshold,
     handle_get_all_datasets_and_metadata,
     handle_get_dataset_image,
@@ -313,7 +314,7 @@ def reduce_image(
     Args:
         image_json: The JSON string of the image to reduce
         feature_collection_json: The JSON string of the geometry to reduce the image to
-        reducer: The reducer to apply
+        reducer: The reducer to apply (lower case)
         scale: The scale of the image. It should be 100 unless otherwise specified.
 
     Returns:
@@ -326,13 +327,13 @@ def reduce_image(
     Note:
         Do not provide a value for temp_dir, it will be handled automatically.
     """
+    reducer = reducer.lower()  # type: ignore[assignment]
     logger.info("Called reduce_image with reducer=%s and scale=%s", reducer, scale)
     if reducer not in get_args(REDUCERS):
         available_reducers = get_args(REDUCERS)
         msg = f"Invalid reducer: {reducer}. Available reducers: {available_reducers}"
         logger.exception(msg)
         raise ValueError(msg)
-
     image_json = safe_json_loads(str(image_json))
     feature_collection_json = safe_json_loads(str(feature_collection_json))
     res = handle_reduce_image(image_json, feature_collection_json, reducer, scale)
@@ -378,6 +379,57 @@ def get_zone_of_area(
     logger.info("Successfully retrieved zone for area %s of type %s", area_name, area_type)
 
     return {"zone_json": res}
+
+
+@mcp.tool(name="build_map")
+def build_map(
+    images_json: list[str | dict[str, Any]],
+    feature_collection_json: str | dict[str, Any],
+    color_palettes: list[list[str]],
+    names: list[str],
+) -> dict[str, str | dict[str, str]]:
+    """Build a map from images and vector data and save it to an HTML file.
+
+    Creates an interactive map by overlaying Earth Engine images on top of vector data
+    (e.g. administrative boundaries). The map is saved as an HTML file that can be viewed
+    in a web browser.
+
+    Each image will be a different layer in the map, with its own color palette and name.
+
+    Args:
+        images_json: List of JSON strings of the Earth Engine images to display on the map
+        feature_collection_json: JSON string of the vector data (e.g. GeoJSON) defining the
+            boundaries to overlay the images on
+        color_palettes: List of color palettes to use for each image layer. Each palette should
+            be a list of color strings (e.g. ["#ff0000", "#00ff00"])
+        names:  List of names for each image layer. Must match length of images_json.
+
+    Returns:
+        dict: A dictionary containing the HTML content of the map under the key 'html_content'
+
+    Use case:
+        Create an interactive map showing fire severity and population density in a region:
+        build_map(["fire_image.json", "population_density_image.json"], "country_boundaries.json",
+                 [["#ff0000", "#00ff00"], ["#0000ff", "#ffff00"]],
+                ["Fire Severity", "Population Density"])
+    """
+    logger.info("Called build_map with %d images", len(images_json))
+    if len(images_json) != len(color_palettes):
+        msg = "The number of color palettes must match the number of images"
+        logger.exception(msg)
+        raise ValueError(msg)
+    if len(images_json) != len(names):
+        msg = "The number of names must match the number of images"
+        logger.exception(msg)
+        raise ValueError(msg)
+
+    images_json = [safe_json_loads(str(image_json)) for image_json in images_json]
+
+    feature_collection_json = safe_json_loads(str(feature_collection_json))
+
+    res = handle_build_map(images_json, feature_collection_json, color_palettes, names)  # type: ignore[arg-type]
+    logger.info("Successfully built map")
+    return {"html_content": res}
 
 
 if __name__ == "__main__":
