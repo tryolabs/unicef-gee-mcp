@@ -44,7 +44,7 @@ def get_all_datasets_and_metadata() -> dict[str, dict[str, DatasetMetadata]]:
     logger.info("Called get_all_datasets_and_metadata")
     res = handle_get_all_datasets_and_metadata(config.path_to_metadata)
     logger.info("Returning %d datasets", len(res))
-    return {"datasets": res}
+    return {"datasets": res, "input_arguments": {}}
 
 
 @mcp.tool(name="get_dataset_image_and_metadata")
@@ -74,14 +74,14 @@ def get_dataset_image(
 
     res = handle_get_dataset_image(dataset, config.path_to_metadata)
     logger.info("Successfully retrieved dataset image for %s", dataset)
-    return {"image_json": res}
+    return {"image_json": res, "input_arguments": {"dataset": dataset}}
 
 
 @mcp.tool(name="mask_image")
 def mask_image(
     image_json: str | dict[str, Any],
     mask_image_json: str | dict[str, Any],
-) -> dict[str, str | dict[str, str]]:
+) -> dict[str, Any]:
     """Mask an Earth Engine image based on a mask.
 
     Masking an image means applying a binary filter to it, where pixels are retained only
@@ -124,7 +124,7 @@ def mask_image(
 def filter_image_by_threshold(
     image_json: str | dict[str, Any],
     threshold: float,
-) -> dict[str, str | dict[str, str]]:
+) -> dict[str, Any]:
     """Filter an Earth Engine image based on a threshold value.
 
     This function applies a threshold filter to an image.
@@ -150,13 +150,13 @@ def filter_image_by_threshold(
     image_json = safe_json_loads(str(image_json))
     res = handle_filter_image_by_threshold(image_json, threshold)
     logger.info("Successfully filtered image by threshold %s", threshold)
-    return {"image_json": res}
+    return {"image_json": res, "input_arguments": {"threshold": threshold}}
 
 
 @mcp.tool(name="union_binary_images")
 def union_binary_images(
     binary_images_jsons: list[str],
-) -> dict[str, str | dict[str, str]]:
+) -> dict[str, Any]:
     """Union multiple binary images.
 
     This function loads binary images from the provided paths and performs
@@ -188,7 +188,7 @@ def union_binary_images(
 @mcp.tool(name="intersect_binary_images")
 def intersect_binary_images(
     binary_images_jsons: list[str],
-) -> dict[str, str | dict[str, str]]:
+) -> dict[str, Any]:
     """Intersect multiple binary images.
 
     This function loads binary images from the provided paths and performs
@@ -220,7 +220,7 @@ def intersect_binary_images(
 @mcp.tool(name="intersect_feature_collections")
 def intersect_feature_collections(
     feature_collections_jsons: list[str],
-) -> dict[str, str | dict[str, str]]:
+) -> dict[str, Any]:
     """Perform a geometric intersection of multiple feature collections.
 
     This function loads feature collections from the provided paths and performs
@@ -265,7 +265,7 @@ def intersect_feature_collections(
 @mcp.tool(name="merge_feature_collections")
 def merge_feature_collections(
     feature_collections_jsons: list[str],
-) -> dict[str, str | dict[str, str]]:
+) -> dict[str, Any]:
     """Merge multiple feature collections into a single combined collection.
 
     This function loads feature collections from the provided paths and merges them
@@ -308,7 +308,7 @@ def reduce_image(
     feature_collection_json: str | dict[str, Any],
     reducer: REDUCERS,
     scale: float = 92.76624195666344,  # scale of child population data,
-) -> dict[str, float | dict[str, float]]:
+) -> dict[str, Any]:
     """Reduce an image by applying a reducer to its pixels within specified regions.
 
     Args:
@@ -338,14 +338,14 @@ def reduce_image(
     feature_collection_json = safe_json_loads(str(feature_collection_json))
     res = handle_reduce_image(image_json, feature_collection_json, reducer, scale)
     logger.info("Successfully reduced image with reducer %s, result: %s", reducer, res)
-    return {"aggregation_result": res}
+    return {"aggregation_result": res, "input_arguments": {"reducer": reducer, "scale": scale}}
 
 
 @mcp.tool(name="get_zone_of_area")
 def get_zone_of_area(
     area_name: str,
     area_type: AREA_TYPES,
-) -> dict[str, str | dict[str, str]]:
+) -> dict[str, Any]:
     """Get the zone boundary for a specified area and return it as a JSON string.
 
     Retrieves the boundary geometry for either a country or admin level 1 area from
@@ -378,7 +378,7 @@ def get_zone_of_area(
     res = handle_get_zone_of_area(area_name, area_type)
     logger.info("Successfully retrieved zone for area %s of type %s", area_name, area_type)
 
-    return {"zone_json": res}
+    return {"zone_json": res, "input_arguments": {"area_name": area_name, "area_type": area_type}}
 
 
 @mcp.tool(name="build_map")
@@ -387,7 +387,7 @@ def build_map(
     feature_collection_json: str | dict[str, Any],
     color_palettes: list[list[str]],
     names: list[str],
-) -> dict[str, str | dict[str, str]]:
+) -> dict[str, Any]:
     """Build a map from images and vector data and save it to an HTML file.
 
     Creates an interactive map by overlaying Earth Engine images on top of vector data
@@ -429,7 +429,10 @@ def build_map(
 
     res = handle_build_map(images_json, feature_collection_json, color_palettes, names)  # type: ignore[arg-type]
     logger.info("Successfully built map")
-    return {"html_content": res}
+    return {
+        "html_content": res,
+        "input_arguments": {"color_palettes": color_palettes, "names": names},
+    }
 
 
 if __name__ == "__main__":
