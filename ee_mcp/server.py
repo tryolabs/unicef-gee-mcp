@@ -307,7 +307,6 @@ def reduce_image(
     image_json: str | dict[str, Any],
     feature_collection_json: str | dict[str, Any],
     reducer: REDUCERS,
-    scale: float = 92.76624195666344,  # scale of child population data,
 ) -> dict[str, Any]:
     """Reduce an image by applying a reducer to its pixels within specified regions.
 
@@ -315,7 +314,6 @@ def reduce_image(
         image_json: The JSON string of the image to reduce
         feature_collection_json: The JSON string of the geometry to reduce the image to
         reducer: The reducer to apply (lower case)
-        scale: The scale of the image. It should be 100 unless otherwise specified.
 
     Returns:
         float: The reduced value
@@ -328,7 +326,7 @@ def reduce_image(
         Do not provide a value for temp_dir, it will be handled automatically.
     """
     reducer = reducer.lower()  # type: ignore[assignment]
-    logger.info("Called reduce_image with reducer=%s and scale=%s", reducer, scale)
+    logger.info("Called reduce_image with reducer=%s", reducer)
     if reducer not in get_args(REDUCERS):
         available_reducers = get_args(REDUCERS)
         msg = f"Invalid reducer: {reducer}. Available reducers: {available_reducers}"
@@ -336,9 +334,9 @@ def reduce_image(
         raise ValueError(msg)
     image_json = safe_json_loads(str(image_json))
     feature_collection_json = safe_json_loads(str(feature_collection_json))
-    res = handle_reduce_image(image_json, feature_collection_json, reducer, scale)
+    res = handle_reduce_image(image_json, feature_collection_json, reducer)
     logger.info("Successfully reduced image with reducer %s, result: %s", reducer, res)
-    return {"aggregation_result": res, "input_arguments": {"reducer": reducer, "scale": scale}}
+    return {"aggregation_result": res, "input_arguments": {"reducer": reducer}}
 
 
 @mcp.tool(name="get_zone_of_area")
