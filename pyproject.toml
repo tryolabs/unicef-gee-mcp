@@ -7,7 +7,6 @@ requires-python = "~=3.11"
 dependencies = [
     "geemap @ git+https://github.com/gee-community/geemap.git",
     "earthengine-api>=1.5.21",
-    "json-repair>=0.47.5",
     "mcp[cli]>=1.10.1",
     "numpy>=2.3.1",
     "pycountry>=24.6.1",

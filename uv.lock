@@ -400,7 +400,6 @@ source = { editable = "." }
 dependencies = [
     { name = "earthengine-api" },
     { name = "geemap" },
-    { name = "json-repair" },
     { name = "mcp", extra = ["cli"] },
     { name = "numpy" },
     { name = "pycountry" },
@@ -427,7 +426,6 @@ dev = [
 requires-dist = [
     { name = "earthengine-api", specifier = ">=1.5.21" },
     { name = "geemap", git = "https://github.com/gee-community/geemap.git" },
-    { name = "json-repair", specifier = ">=0.47.5" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.10.1" },
     { name = "numpy", specifier = ">=2.3.1" },
     { name = "pycountry", specifier = ">=24.6.1" },
@@ -926,15 +924,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/df/bf/f7da0350254c0ed7c72f3e33cef02e048281fec7ecec5f032d4aac52226b/jinja2-3.1.6.tar.gz", hash = "sha256:0137fb05990d35f1275a587e9aee6d56da821fc83491a0fb838183be43f66d6d", size = 245115 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl", hash = "sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67", size = 134899 },
-]
-
-[[package]]
-name = "json-repair"
-version = "0.47.5"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c6/7f/f855e54df8635bfcb62c85db0a75116e4c6b098c60bb342c332464bfbe10/json_repair-0.47.5.tar.gz", hash = "sha256:13a05e21a1143ecb1010067dce46680595c815e202d5819975dd1070ee0dbcb2", size = 34180 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e2/16/8834ab815fa31c6c0ee4b50d49df1a6e102eeb8b73f8954a7dfc7eb4644d/json_repair-0.47.5-py3-none-any.whl", hash = "sha256:30b56019b7e30ae109ca411c3588b8d6951bbfe266b7ba29513bae8a0ab9eb36", size = 25654 },
 ]
 
 [[package]]
