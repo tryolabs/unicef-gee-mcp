@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, get_args
 
 from config import config
@@ -32,6 +33,32 @@ initialize_ee(config.path_to_ee_auth)
 
 
 logger = get_logger(__name__)
+
+
+@mcp.tool(name="create_temp_dir")
+def create_temp_dir(trace_id: str) -> dict[str, Any]:
+    """Create a temporary directory for storing intermediate processing files.
+
+    This function creates a unique temporary directory using the provided trace_id
+    to organize and isolate files generated during a specific processing session.
+    The directory is created under the 'data' folder with the trace_id as the subdirectory name.
+
+    Args:
+        trace_id (str): Unique identifier used to create a specific temporary directory path.
+
+    Returns:
+        dict[str, Any]: Dictionary containing:
+            - input_arguments (dict): Contains 'temp_dir' key with the absolute path as string.
+
+    Example:
+        >>> create_temp_dir("session_123")
+        {"input_arguments": {"temp_dir": "/path/to/data/session_123"}}
+    """
+    logger.info("Called create_temp_dir with trace_id=%s", trace_id)
+    temp_dir = Path(f"data/{trace_id}").resolve()
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    logger.info("Created temporary directory %s", temp_dir)
+    return {"result": "success", "input_arguments": {"temp_dir": str(temp_dir)}}
 
 
 @mcp.tool(name="get_all_datasets_and_metadata")
@@ -431,6 +458,47 @@ def build_map(
         "html_content": res,
         "input_arguments": {"color_palettes": color_palettes, "names": names},
     }
+
+
+@mcp.tool(name="delete_temp_dir")
+def delete_temp_dir(trace_id: str) -> dict[str, Any]:
+    """Delete the temporary directory associated with a processing session.
+
+    This function removes the temporary directory created for a specific trace_id,
+    cleaning up all intermediate files generated during the processing session.
+    This is typically called at the end of a workflow to free up disk space.
+
+    Args:
+        trace_id (str): Unique identifier of the processing session.
+
+    Returns:
+        dict[str, Any]: Dictionary containing:
+            - input_arguments (dict): Contains 'temp_dir' key with the deleted directory path,
+              or a string indicating the directory was already deleted.
+
+    Example:
+        >>> delete_temp_dir("session_123")
+        {"input_arguments": {"temp_dir": "/path/to/data/session_123"}}
+    """
+    logger.info("Called delete_temp_dir with trace_id=%s", trace_id)
+    temp_dir = Path(f"data/{trace_id}")
+    if not temp_dir.exists():
+        logger.info("Temporary directory %s already deleted or does not exist", temp_dir)
+        return {
+            "result": "Temporary directory already deleted or does not exist",
+            "input_arguments": {"temp_dir": str(temp_dir)},
+        }
+    try:
+        temp_dir.rmdir()
+        logger.info("Deleted temporary directory %s", temp_dir)
+        return {"result": "success", "input_arguments": {"temp_dir": str(temp_dir)}}
+    except Exception as e:
+        msg = f"Failed to delete temporary directory {temp_dir}: {e}"
+        logger.exception(msg)
+        return {
+            "result": "Failed to delete temporary directory",
+            "input_arguments": {"temp_dir": str(temp_dir)},
+        }
 
 
 if __name__ == "__main__":
