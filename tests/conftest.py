@@ -39,7 +39,7 @@ def mock_ee_module() -> Generator[MagicMock, None, None]:
 def sample_config_data() -> dict[str, Any]:
     """Sample configuration data."""
     return {
-        "server": {"port": 6002, "transport": "sse"},
+        "server": {"port": 6002, "transport": "sse", "host": "0.0.0.0"},  # noqa: S104
         "path_to_metadata": "test_metadata.yaml",
         "path_to_ee_auth": "test_auth.json",
     }

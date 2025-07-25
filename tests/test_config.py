@@ -9,6 +9,7 @@ from config import config, load_config
 
 PORT = 6002
 TRANSPORT = "sse"
+HOST = "0.0.0.0"  # noqa: S104
 
 
 class TestLoadConfig:
@@ -20,6 +21,7 @@ class TestLoadConfig:
 
         assert result.server.port == PORT
         assert result.server.transport == TRANSPORT
+        assert result.server.host == HOST
         assert result.path_to_metadata.name == "test_metadata.yaml"
         assert result.path_to_ee_auth.name == "test_auth.json"
 
@@ -46,7 +48,7 @@ class TestLoadConfig:
         incomplete_config = {
             "server": {
                 "port": 8080
-                # Missing transport
+                # Missing transport and host
             }
             # Missing path_to_metadata and path_to_ee_auth
         }
@@ -64,7 +66,7 @@ class TestLoadConfig:
     def test_load_config_with_relative_paths(self) -> None:
         """Test loading config with relative paths."""
         config_data = {
-            "server": {"port": 8080, "transport": "stdio"},
+            "server": {"port": 8080, "transport": "stdio", "host": "127.0.0.1"},
             "path_to_metadata": "relative/metadata.yaml",
             "path_to_ee_auth": "relative/auth.json",
         }
@@ -75,6 +77,7 @@ class TestLoadConfig:
 
         try:
             result = load_config(temp_path)
+            assert result.server.host == "127.0.0.1"
             assert result.path_to_metadata.name == "metadata.yaml"
             assert result.path_to_ee_auth.name == "auth.json"
         finally:
@@ -83,7 +86,7 @@ class TestLoadConfig:
     def test_load_config_with_absolute_paths(self) -> None:
         """Test loading config with absolute paths."""
         config_data = {
-            "server": {"port": 8080, "transport": "sse"},
+            "server": {"port": 8080, "transport": "sse", "host": "localhost"},
             "path_to_metadata": "/absolute/path/to/metadata.yaml",
             "path_to_ee_auth": "/absolute/path/to/auth.json",
         }
@@ -94,6 +97,7 @@ class TestLoadConfig:
 
         try:
             result = load_config(temp_path)
+            assert result.server.host == "localhost"
             assert str(result.path_to_metadata) == "/absolute/path/to/metadata.yaml"
             assert str(result.path_to_ee_auth) == "/absolute/path/to/auth.json"
         finally:
@@ -114,7 +118,12 @@ class TestLoadConfig:
     def test_load_config_with_extra_fields(self) -> None:
         """Test loading config with extra fields (should be ignored)."""
         config_data = {
-            "server": {"port": 8080, "transport": "stdio", "extra_field": "ignored"},
+            "server": {
+                "port": 8080,
+                "transport": "stdio",
+                "host": "0.0.0.0",  # noqa: S104
+                "extra_field": "ignored",
+            },
             "path_to_metadata": "metadata.yaml",
             "path_to_ee_auth": "auth.json",
             "extra_top_level": "also_ignored",
@@ -128,6 +137,7 @@ class TestLoadConfig:
             result = load_config(temp_path)
             assert result.server.port == 8080  # noqa: PLR2004
             assert result.server.transport == "stdio"
+            assert result.server.host == "0.0.0.0"  # noqa: S104
         finally:
             temp_path.unlink()
 
@@ -145,8 +155,10 @@ class TestConfigModule:
         """Test that config.server has expected attributes."""
         assert hasattr(config.server, "port")
         assert hasattr(config.server, "transport")
+        assert hasattr(config.server, "host")
         assert isinstance(config.server.port, int)
         assert isinstance(config.server.transport, str)
+        assert isinstance(config.server.host, str)
 
     def test_config_path_attributes(self) -> None:
         """Test that config paths are Path objects."""
@@ -160,7 +172,7 @@ class TestConfigEdgeCases:
     def test_load_config_with_unicode_paths(self) -> None:
         """Test loading config with unicode characters in paths."""
         config_data = {
-            "server": {"port": 8080, "transport": "stdio"},
+            "server": {"port": 8080, "transport": "stdio", "host": "0.0.0.0"},  # noqa: S104
             "path_to_metadata": "metadata_ñ_€_中文.yaml",
             "path_to_ee_auth": "auth_ñ_€_中文.json",
         }
@@ -171,6 +183,7 @@ class TestConfigEdgeCases:
 
         try:
             result = load_config(temp_path)
+            assert result.server.host == "0.0.0.0"  # noqa: S104
             assert "ñ" in result.path_to_metadata.name
             assert "€" in result.path_to_metadata.name
             assert "中文" in result.path_to_metadata.name
@@ -181,7 +194,7 @@ class TestConfigEdgeCases:
         """Test loading config with very long file paths."""
         long_name = "a" * 200
         config_data = {
-            "server": {"port": 8080, "transport": "sse"},
+            "server": {"port": 8080, "transport": "sse", "host": "127.0.0.1"},
             "path_to_metadata": f"{long_name}.yaml",
             "path_to_ee_auth": f"{long_name}.json",
         }
@@ -192,6 +205,7 @@ class TestConfigEdgeCases:
 
         try:
             result = load_config(temp_path)
+            assert result.server.host == "127.0.0.1"
             assert len(result.path_to_metadata.name) == 205  # 200 + ".yaml"  # noqa: PLR2004
             assert len(result.path_to_ee_auth.name) == 205  # 200 + ".json"  # noqa: PLR2004
         finally:
@@ -200,7 +214,7 @@ class TestConfigEdgeCases:
     def test_load_config_with_minimum_port(self) -> None:
         """Test loading config with minimum valid port number."""
         config_data = {
-            "server": {"port": 1, "transport": "stdio"},
+            "server": {"port": 1, "transport": "stdio", "host": "localhost"},
             "path_to_metadata": "metadata.yaml",
             "path_to_ee_auth": "auth.json",
         }
@@ -212,13 +226,14 @@ class TestConfigEdgeCases:
         try:
             result = load_config(temp_path)
             assert result.server.port == 1  # noqa: PLR2004
+            assert result.server.host == "localhost"
         finally:
             temp_path.unlink()
 
     def test_load_config_with_maximum_port(self) -> None:
         """Test loading config with maximum valid port number."""
         config_data = {
-            "server": {"port": 65535, "transport": "sse"},
+            "server": {"port": 65535, "transport": "sse", "host": "0.0.0.0"},  # noqa: S104
             "path_to_metadata": "metadata.yaml",
             "path_to_ee_auth": "auth.json",
         }
@@ -230,13 +245,14 @@ class TestConfigEdgeCases:
         try:
             result = load_config(temp_path)
             assert result.server.port == 65535  # noqa: PLR2004
+            assert result.server.host == "0.0.0.0"  # noqa: S104
         finally:
             temp_path.unlink()
 
     def test_load_config_with_nested_directory_paths(self) -> None:
         """Test loading config with deeply nested directory paths."""
         config_data = {
-            "server": {"port": 8080, "transport": "streamable-http"},
+            "server": {"port": 8080, "transport": "streamable-http", "host": "::1"},
             "path_to_metadata": "deep/nested/directory/structure/metadata.yaml",
             "path_to_ee_auth": "another/deep/nested/path/auth.json",
         }
@@ -247,6 +263,7 @@ class TestConfigEdgeCases:
 
         try:
             result = load_config(temp_path)
+            assert result.server.host == "::1"
             assert "deep/nested" in str(result.path_to_metadata)
             assert "another/deep" in str(result.path_to_ee_auth)
         finally:
@@ -259,7 +276,11 @@ class TestConfigValidation:
     def test_load_config_invalid_transport(self) -> None:
         """Test loading config with invalid transport value."""
         config_data = {
-            "server": {"port": 8080, "transport": "invalid_transport"},
+            "server": {
+                "port": 8080,
+                "transport": "invalid_transport",
+                "host": "0.0.0.0",  # noqa: S104
+            },
             "path_to_metadata": "metadata.yaml",
             "path_to_ee_auth": "auth.json",
         }
