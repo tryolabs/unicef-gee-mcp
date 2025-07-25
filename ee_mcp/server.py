@@ -19,7 +19,7 @@ from handlers import (
 from initialize import initialize_ee, load_all_datasets
 from mcp.server.fastmcp import FastMCP
 from schemas import AREA_TYPES, REDUCERS, DatasetMetadata
-from utils import safe_json_loads
+from utils import save_ee_object
 
 load_dotenv(override=True)
 
@@ -30,7 +30,6 @@ mcp = FastMCP("GEE MCP", host=config.server.host, port=config.server.port)
 from logging_config import get_logger  # noqa: E402
 
 initialize_ee(config.path_to_ee_auth)
-
 
 logger = get_logger(__name__)
 
@@ -63,10 +62,31 @@ def create_temp_dir(trace_id: str) -> dict[str, Any]:
 
 @mcp.tool(name="get_all_datasets_and_metadata")
 def get_all_datasets_and_metadata() -> dict[str, dict[str, DatasetMetadata]]:
-    """Get all available datasets names and metadata.
+    """Retrieve all available datasets and their associated metadata.
+
+    This function loads and returns all datasets that are available in the system
+    along with their metadata information. The metadata includes details such as
+    dataset descriptions, data sources, temporal coverage, and other relevant attributes.
+
+    Args:
+        None
 
     Returns:
-        A dictionary containing the metadata for all available datasets
+        dict[str, dict[str, DatasetMetadata]]: Dictionary containing:
+            - datasets (dict): Nested dictionary where:
+              - keys are dataset names
+              - values are DatasetMetadata objects
+            - input_arguments (dict): Empty dictionary for consistency with other functions.
+
+    Example:
+        >>> get_all_datasets_and_metadata()
+        {
+            "datasets": {
+                "flood_data": {"name": "Flood Dataset", "description": "Global flood data", ...},
+                "drought_data": {"name": "Drought Dataset", "description": "Drought indices", ...}
+            },
+            "input_arguments": {}
+        }
     """
     logger.info("Called get_all_datasets_and_metadata")
     res = handle_get_all_datasets_and_metadata(config.path_to_metadata)
@@ -77,280 +97,330 @@ def get_all_datasets_and_metadata() -> dict[str, dict[str, DatasetMetadata]]:
 @mcp.tool(name="get_dataset_image_and_metadata")
 def get_dataset_image(
     dataset: str,
+    trace_id: str,
 ) -> dict[str, DatasetMetadata | str | dict[str, str]]:
-    """Get an image from Earth Engine and return its JSON representation and metadata.
+    """Retrieve a specific dataset image and save it to a temporary location.
+
+    This function loads a specific dataset image from Google Earth Engine and saves
+    it as a JSON file in the temporary directory associated with the trace_id.
+    The dataset name is case-insensitive and must exist in the available datasets.
 
     Args:
-        dataset: The dataset to get the image and metadata for
+        dataset (str): Name of the dataset to retrieve (case-insensitive).
+        trace_id (str): Unique identifier for the processing session to determine save location.
 
     Returns:
-        A dictionary containing the metadata and JSON representation of the image
-        and the input arguments
+        dict[str, DatasetMetadata | str | dict[str, str]]: Dictionary containing:
+            - image_path (str): Path to the saved JSON file containing the dataset image.
+            - input_arguments (dict): Contains the dataset name used.
 
-    Use case:
-        Retrieve a global agricultural drought dataset to analyze drought conditions:
-        get_dataset_image("agricultural_drought")
+    Raises:
+        ValueError: If the specified dataset is not found in available datasets.
+
+    Example:
+        >>> get_dataset_image("FLOOD_DATA", "session_123")
+        {
+            "image_path": "data/session_123/image-flood_data.json",
+            "input_arguments": {"dataset": "flood_data"}
+        }
     """
     logger.info("Called get_dataset_image with dataset=%s", dataset)
     dataset = dataset.lower()
-    if dataset not in load_all_datasets(config.path_to_metadata):
-        available_datasets = load_all_datasets(config.path_to_metadata)
+    available_datasets = load_all_datasets(config.path_to_metadata)
+    if dataset not in available_datasets:
         msg = f"Invalid dataset '{dataset}'. Available datasets: {available_datasets}"
         logger.exception(msg)
         raise ValueError(msg)
-
     res = handle_get_dataset_image(dataset, config.path_to_metadata)
+    image_path = f"data/{trace_id}/image-{dataset}.json"
+    save_ee_object(image_path, res)
     logger.info("Successfully retrieved dataset image for %s", dataset)
-    return {"image_json": res, "input_arguments": {"dataset": dataset}}
+    return {"image_path": image_path, "input_arguments": {"dataset": dataset}}
 
 
 @mcp.tool(name="mask_image")
 def mask_image(
-    image_json: str | dict[str, Any],
-    mask_image_json: str | dict[str, Any],
+    image_path: str,
+    mask_image_path: str,
+    result_name: str,
 ) -> dict[str, Any]:
-    """Mask an Earth Engine image based on a mask.
+    """Apply a mask to an image using another image as the mask.
 
-    Masking an image means applying a binary filter to it, where pixels are retained only
-    where the mask has non-zero values. This effectively "cuts out" or preserves only the
-    areas of interest defined by the mask, while setting all other areas to no-data values.
-
-    This is the operation used to intersect two images.
-
-    The mask should be a binary image where:
-    - Values of 1 (or non-zero) indicate areas to keep in the original image
-    - Values of 0 indicate areas to mask out (set to no-data)
-
-    This operation can only be used with images.
+    This function takes an input image and applies a mask image to it, effectively
+    filtering the input image to only show areas where the mask has valid values.
+    The result is saved as a new JSON file in the same directory as the input image.
 
     Args:
-        image_json: JSON string of the Earth Engine image
-        mask_image_json: JSON string of the Earth Engine binary image mask.
+        image_path (str): Path to the input image JSON file to be masked.
+        mask_image_path (str): Path to the mask image JSON file used for masking.
+        result_name (str): Name for the output masked image file (without extension).
 
     Returns:
-        dict: A dictionary containing:
-            - image_json: JSON string of the masked Earth Engine image
-            - input_arguments: The original input arguments used for the operation
+        dict[str, Any]: Dictionary containing:
+            - image_path (str): Path to the saved masked image JSON file.
+            - input_arguments (dict): Contains all input parameters used.
 
-    Use case:
-        Get the zone of exposed children to a hazard.
-        mask_image(
-            child_population_data_json,
-            hazard_data_json,
-        )
+    Example:
+        >>> mask_image("data/session_123/children_population.json",
+        ...     "data/session_123/flood_zones.json",
+        ...     "children_population_flood_zones",
+        ... )
+        {
+            "image_path": "data/session_123/children_population_flood_zones.json",
+            "input_arguments": {
+                "image_path": "data/session_123/children_population.json",
+                "mask_image_path": "data/session_123/flood_zones.json",
+                "result_name": "children_population_flood_zones"
+            }
+        }
     """
-    logger.info("Called mask_image")
-    image_json = safe_json_loads(str(image_json))
-    mask_image_json = safe_json_loads(str(mask_image_json))
-    res = handle_mask_image(image_json, mask_image_json)
+    logger.info(
+        "Called mask_image with image_path=%s, mask_image_path=%s, result_name=%s",
+        image_path,
+        mask_image_path,
+        result_name,
+    )
+    res = handle_mask_image(image_path, mask_image_path)
+    result_path = f"{'/'.join(image_path.split('/')[:-1])}/{result_name}.json"
+    save_ee_object(result_path, res)
     logger.info("Successfully masked image")
-    return {"image_json": res}
+    return {
+        "image_path": result_path,
+        "input_arguments": {
+            "image_path": image_path,
+            "mask_image_path": mask_image_path,
+            "result_name": result_name,
+        },
+    }
 
 
 @mcp.tool(name="filter_image_by_threshold")
 def filter_image_by_threshold(
-    image_json: str | dict[str, Any],
+    image_path: str,
     threshold: float,
 ) -> dict[str, Any]:
-    """Filter an Earth Engine image based on a threshold value.
+    """Filter an image by applying a threshold to create a binary mask.
 
-    This function applies a threshold filter to an image.
-    The result is a binary image where the values are either 0 or 1.
+    This function applies a threshold filter to an image, creating a binary image
+    where pixels above the threshold are preserved and pixels below are masked out.
+    The filtered result is saved as a new JSON file in the same directory.
 
     Args:
-        image_json: JSON string of the Earth Engine image
-        threshold: Numeric value to use as the threshold for filtering
+        image_path (str): Path to the input image JSON file to be filtered.
+        threshold (float): Threshold value used for filtering. Pixels above this value are kept.
 
     Returns:
-        dict: A dictionary containing:
-            - image_json: JSON string of the filtered Earth Engine image
-            - input_arguments: The original input arguments used for the operation
+        dict[str, Any]: Dictionary containing the filtered image path and input arguments.
+            - image_path (str): Path to the saved filtered image JSON file.
+            - input_arguments (dict): Contains the threshold value used.
 
-    Raises:
-        TypeError: If the loaded data is not an Earth Engine Image object
-
-    Use case:
-        Identify hazard areas with values above a threshold.
-        filter_image_by_threshold(temperature_data_json, 35.0)
+    Example:
+        >>> filter_image_by_threshold("data/session_123/precipitation.json", 50.0)
+        {
+            "image_path": "data/session_123/filtered-image.json",
+            "input_arguments": {"threshold": 50.0}
+        }
     """
-    logger.info("Called filter_image_by_threshold with threshold=%s", threshold)
-    image_json = safe_json_loads(str(image_json))
-    res = handle_filter_image_by_threshold(image_json, threshold)
-    logger.info("Successfully filtered image by threshold %s", threshold)
-    return {"image_json": res, "input_arguments": {"threshold": threshold}}
+    try:
+        logger.info(
+            "Called filter_image_by_threshold with image_path=%s, threshold=%s",
+            image_path,
+            threshold,
+        )
+        res = handle_filter_image_by_threshold(image_path, threshold)
+        result_path = f"{'/'.join(image_path.split('/')[:-1])}/filtered-image.json"
+        save_ee_object(result_path, res)
+        logger.info("Successfully filtered image by threshold %s", threshold)
+    except Exception as e:
+        msg = f"Error filtering image by threshold {threshold}: {e}"
+        logger.exception(msg)
+        raise ValueError(msg) from e
+    return {"image_path": result_path, "input_arguments": {"threshold": threshold}}
 
 
 @mcp.tool(name="union_binary_images")
 def union_binary_images(
-    binary_images_jsons: list[str],
+    binary_images_paths: list[str],
 ) -> dict[str, Any]:
-    """Union multiple binary images.
+    """Perform a union operation on multiple binary images.
 
-    This function loads binary images from the provided paths and performs
-    a union operation, returning a new binary image where any of the input images
-    have values of 1.
+    This function takes multiple binary images and performs a logical OR operation,
+    creating a combined image where a pixel is 1 if it's 1 in any of the input images.
+    The operation is useful for combining multiple hazard or risk areas.
 
     Args:
-        binary_images_jsons: List of JSON strings of the binary images to union.
-            Each JSON should point to a valid Earth Engine Image.
+        binary_images_paths (list[str]): List of paths to binary image JSON files to union.
 
     Returns:
-        dict: A dictionary containing:
-            - image_json: JSON string of the union result
-            - input_arguments: The original input arguments used for the operation
+        dict[str, Any]: Dictionary containing the union result image path.
+            - image_path (str): Path to the resulting union image.
 
-    Use case:
-        Union two binary images to find areas that are either hazard zones.
-        union_binary_images([flood_zones_json, drought_zones_json])
+    Example:
+        >>> union_binary_images([
+        ...     "data/session_123/flood_mask.json",
+        ...     "data/session_123/drought_mask.json",
+        ... ])
+        {
+            "image_path": "data/session_123/union_result.json"
+        }
     """
-    logger.info("Called union_binary_images with %d images", len(binary_images_jsons))
-    for i, image_json in enumerate(binary_images_jsons):
-        binary_images_jsons[i] = safe_json_loads(image_json)
-
-    res = handle_union_binary_images(binary_images_jsons)
-    logger.info("Successfully performed union on %d binary images", len(binary_images_jsons))
-    return {"image_json": res}
+    logger.info("Called union_binary_images with %d images", len(binary_images_paths))
+    res = handle_union_binary_images(binary_images_paths)
+    logger.info("Successfully performed union on %d binary images", len(binary_images_paths))
+    return {"image_path": res}
 
 
 @mcp.tool(name="intersect_binary_images")
 def intersect_binary_images(
-    binary_images_jsons: list[str],
+    binary_images_paths: list[str],
 ) -> dict[str, Any]:
-    """Intersect multiple binary images.
+    """Perform an intersection operation on multiple binary images.
 
-    This function loads binary images from the provided paths and performs
-    an intersection operation, returning a new binary image where all the input images
-    have values of 1.
+    This function takes multiple binary images and performs a logical AND operation,
+    creating a combined image where a pixel is 1 only if it's 1 in all input images.
+    This is useful for finding areas that satisfy multiple conditions simultaneously.
 
     Args:
-        binary_images_jsons: List of JSON strings of the binary images to intersect.
-            Each JSON should point to a valid Earth Engine Image.
+        binary_images_paths (list[str]): List of paths to binary image JSON files to intersect.
 
     Returns:
-        dict: A dictionary containing:
-            - image_json: JSON string of the intersection result
-            - input_arguments: The original input arguments used for the operation
+        dict[str, Any]: Dictionary containing the intersection result image path.
+            - image_path (str): Path to the saved intersection image JSON file.
 
-    Use case:
-        Intersect two binary images to find areas that are both hazard zones.
-        intersect_binary_images([flood_zones_json, drought_zones_json])
+    Example:
+        >>> intersect_binary_images([
+        ...     "data/session_123/flood_areas.json",
+        ...     "data/session_123/fire_areas.json",
+        ... ])
+        {
+            "image_path": "data/session_123/flood_and_fire_areas.json"
+        }
     """
-    logger.info("Called intersect_binary_images with %d images", len(binary_images_jsons))
-    for i, image_json in enumerate(binary_images_jsons):
-        binary_images_jsons[i] = safe_json_loads(image_json)
-
-    res = handle_intersect_binary_images(binary_images_jsons)
-    logger.info("Successfully performed intersection on %d binary images", len(binary_images_jsons))
-    return {"image_json": res}
+    logger.info("Called intersect_binary_images with %d images", len(binary_images_paths))
+    res = handle_intersect_binary_images(binary_images_paths)
+    logger.info("Successfully performed intersection on %d binary images", len(binary_images_paths))
+    result_path = f"{'/'.join(binary_images_paths[0].split('/')[:-1])}/intersection.json"
+    save_ee_object(result_path, res)
+    return {"image_path": result_path}
 
 
 @mcp.tool(name="intersect_feature_collections")
 def intersect_feature_collections(
-    feature_collections_jsons: list[str],
+    feature_collections_paths: list[str],
 ) -> dict[str, Any]:
-    """Perform a geometric intersection of multiple feature collections.
+    """Perform spatial intersection on multiple feature collections.
 
-    This function loads feature collections from the provided paths and performs
-    a geometric intersection operation, returning features that exist in all collections.
-
-    Note: This operation only works with vector data (feature collections).
-    Images cannot be intersected using this method.
+    This function takes multiple vector feature collections and computes their
+    spatial intersection, returning only the areas where all input collections overlap.
+    This is useful for finding common geographic areas across multiple datasets.
 
     Args:
-        feature_collections_jsons: List of JSON strings of the feature collections to intersect.
-            Each JSON should point to a valid Earth Engine FeatureCollection.
-            All inputs must be vector data (feature collections), not images.
+        feature_collections_paths (list[str]): List of paths to feature collection JSON files
+                                             to intersect.
 
     Returns:
-        dict: A dictionary containing:
-            - feature_collection_json: JSON string of the intersection result
-            - input_arguments: The original input arguments used for the operation
+        dict[str, Any]: Dictionary containing:
+            - feature_collection_path (str): Path to the saved intersection feature collection
+                                            JSON file.
 
-    Raises:
-        TypeError: If any input is an Image
-
-    Use case:
-        Find areas that are both flood-prone and densely populated by intersecting flood
-        hazard zones with population density data:
-        intersect_feature_collections([flood_zones_json, high_population_areas_json])
+    Example:
+        >>> intersect_feature_collections([
+        ...     "data/session_456/country-zone.json",
+        ...     "data/session_456/city-zone.json",
+        ... ])
+        {
+            "feature_collection_path": "data/session_456/intersection.json"
+        }
     """
     logger.info(
         "Called intersect_feature_collections with %d feature collections",
-        len(feature_collections_jsons),
+        len(feature_collections_paths),
     )
-    for i, feature_collection_json in enumerate(feature_collections_jsons):
-        feature_collections_jsons[i] = safe_json_loads(feature_collection_json)
-
-    res = handle_intersect_feature_collections(feature_collections_jsons)
+    res = handle_intersect_feature_collections(feature_collections_paths)
     logger.info(
         "Successfully performed intersection on %d feature collections",
-        len(feature_collections_jsons),
+        len(feature_collections_paths),
     )
-    return {"feature_collection_json": res}
+    result_path = f"{'/'.join(feature_collections_paths[0].split('/')[:-1])}/intersection.json"
+    save_ee_object(result_path, res)
+    return {"feature_collection_path": result_path}
 
 
 @mcp.tool(name="merge_feature_collections")
 def merge_feature_collections(
-    feature_collections_jsons: list[str],
+    feature_collections_paths: list[str],
 ) -> dict[str, Any]:
-    """Merge multiple feature collections into a single combined collection.
+    """Merge multiple feature collections into a single collection.
 
-    This function loads feature collections from the provided paths and merges them
-    into a single feature collection containing all features from the input collections.
-
-    Note: This operation only works with vector data (feature collections).
-    Images cannot be merged using this method.
+    This function combines multiple vector feature collections into one unified
+    collection containing all features from all input collections. This is useful
+    for consolidating geographic data from multiple sources or processing steps.
 
     Args:
-        feature_collections_jsons: List of JSON strings of the feature collections to merge.
-            Each JSON should point to a valid Earth Engine FeatureCollection.
+        feature_collections_paths (list[str]): List of paths to feature collection JSON files
+                                                to merge.
 
     Returns:
-        dict: A dictionary containing:
-            - feature_collection_json: JSON string of the merged result
-            - input_arguments: The original input arguments used for the operation
+        dict[str, Any]: Dictionary containing:
+            - feature_collection_path (str): Path to the saved merged feature collection JSON file.
 
-    Raises:
-        TypeError: If any input is an Image
+    Example:
+        >>> merge_feature_collections([
+        ...     "data/session_123/uruguay-zone.json",
+        ...     "data/session_123/argentina-zone.json",
+        ... ])
+        {
+            "feature_collection_path": "data/session_123/uruguay_and_argentina-zone.json"
 
-    Use case:
-        Combine different country areas into a single feature collection.
-        merge_feature_collections([uruguay_json, argentina_json])
+        }
     """
     logger.info(
         "Called merge_feature_collections with %d feature collections",
-        len(feature_collections_jsons),
+        len(feature_collections_paths),
     )
-    for i, feature_collection_json in enumerate(feature_collections_jsons):
-        feature_collections_jsons[i] = safe_json_loads(feature_collection_json)
-
-    res = handle_merge_feature_collections(feature_collections_jsons)
-    logger.info("Successfully merged %d feature collections", len(feature_collections_jsons))
-    return {"feature_collection_json": res}
+    res = handle_merge_feature_collections(feature_collections_paths)
+    logger.info("Successfully merged %d feature collections", len(feature_collections_paths))
+    result_path = f"{'/'.join(feature_collections_paths[0].split('/')[:-1])}/merged.json"
+    save_ee_object(result_path, res)
+    return {"feature_collection_path": result_path}
 
 
 @mcp.tool(name="reduce_image")
 def reduce_image(
-    image_json: str | dict[str, Any],
-    feature_collection_json: str | dict[str, Any],
+    image_path: str,
+    feature_collection_path: str,
     reducer: REDUCERS,
 ) -> dict[str, Any]:
-    """Reduce an image by applying a reducer to its pixels within specified regions.
+    """Perform statistical reduction of image data within feature collection boundaries.
+
+    This function applies a statistical reducer (e.g., mean, sum, max) to image data
+    within the boundaries defined by a feature collection. This is commonly used
+    to calculate statistics like average rainfall per administrative region or
+    total population within specific areas.
 
     Args:
-        image_json: The JSON string of the image to reduce
-        feature_collection_json: The JSON string of the geometry to reduce the image to
-        reducer: The reducer to apply (lower case)
+        image_path (str): Path to the input image JSON file to reduce.
+        feature_collection_path (str): Path to feature collection JSON file defining the reduction
+                                       boundaries.
+        reducer (REDUCERS): Type of statistical reduction to perform.
 
     Returns:
-        float: The reduced value
+        dict[str, Any]: Dictionary containing the aggregation result and input arguments.
+            - aggregation_result: The computed statistical values for each feature.
+            - input_arguments (dict): Contains the reducer type used.
 
-    Use case:
-        Calculate the average rainfall within specific administrative boundaries:
-        reduce_image("rainfall_data.json", "admin_boundaries.json", REDUCERS.MEAN)
+    Raises:
+        ValueError: If the specified reducer is not supported.
 
-    Note:
-        Do not provide a value for temp_dir, it will be handled automatically.
+    Example:
+        >>> reduce_image("data/session_123/precipitation.json",
+        ...     "data/session_123/countries.json",
+        ...     "mean",
+        ... )
+        {
+            "aggregation_result": {"country1": 45.2, "country2": 38.7},
+            "input_arguments": {"reducer": "mean"}
+        }
     """
     reducer = reducer.lower()  # type: ignore[assignment]
     logger.info("Called reduce_image with reducer=%s", reducer)
@@ -359,10 +429,10 @@ def reduce_image(
         msg = f"Invalid reducer: {reducer}. Available reducers: {available_reducers}"
         logger.exception(msg)
         raise ValueError(msg)
-    image_json = safe_json_loads(str(image_json))
-    feature_collection_json = safe_json_loads(str(feature_collection_json))
-    res = handle_reduce_image(image_json, feature_collection_json, reducer)
+
+    res = handle_reduce_image(image_path, feature_collection_path, reducer)
     logger.info("Successfully reduced image with reducer %s, result: %s", reducer, res)
+
     return {"aggregation_result": res, "input_arguments": {"reducer": reducer}}
 
 
@@ -370,28 +440,33 @@ def reduce_image(
 def get_zone_of_area(
     area_name: str,
     area_type: AREA_TYPES,
+    trace_id: str,
 ) -> dict[str, Any]:
-    """Get the zone boundary for a specified area and return it as a JSON string.
+    """Retrieve the geometric boundary of a specified geographic area.
 
-    Retrieves the boundary geometry for either a country or admin level 1 area from
-    Earth Engine and returns it as a JSON string.
+    This function fetches the geographic boundary (zone) for a named area of a specific type
+    (e.g., country, state, city). The zone is returned as a feature collection and saved
+    to the temporary directory for further processing.
 
     Args:
-        area_name: Name of the area to get boundary for.
-                If it is a country, it should be the ISO 3166-1 alpha-3 code.
-        area_type: Type of area - either 'country' or 'admin1'. Determines which
-            dataset to query.
+        area_name (str): Name of the geographic area to retrieve.
+        area_type (AREA_TYPES): Type of area (e.g., 'country', 'state', 'city').
+        trace_id (str): Unique identifier for the processing session.
 
     Returns:
-        dict[str, str]: A dictionary containing:
-            - zone_json: JSON string of the vector file
+        dict[str, Any]: Dictionary containing:
+            - zone_json (str): Path to the saved zone feature collection JSON file.
+            - input_arguments (dict): Contains the area name and type used.
+
+    Raises:
+        ValueError: If the specified area type is not supported.
 
     Example:
-        To get boundary data for France:
-        >>> zone_json = get_zone_of_area("France", "country")
-
-        To get boundary data for California:
-        >>> zone_json = get_zone_of_area("California", "admin1")
+        >>> get_zone_of_area("Kenya", "country", "session_123")
+        {
+            "zone_json": "data/session_123/zone-Kenya.json",
+            "input_arguments": {"area_name": "Kenya", "area_type": "country"}
+        }
     """
     logger.info("Called get_zone_of_area with area_name=%s and area_type=%s", area_name, area_type)
     if area_type not in get_args(AREA_TYPES):
@@ -399,60 +474,70 @@ def get_zone_of_area(
         msg = f"Invalid area type: {area_type}. Available types: {available_area_types}"
         logger.exception(msg)
         raise ValueError(msg)
-
     res = handle_get_zone_of_area(area_name, area_type)
     logger.info("Successfully retrieved zone for area %s of type %s", area_name, area_type)
-
-    return {"zone_json": res, "input_arguments": {"area_name": area_name, "area_type": area_type}}
+    result_path = f"data/{trace_id}/zone-{area_name}.json"
+    save_ee_object(result_path, res)
+    logger.info("Saved zone to %s", result_path)
+    return {
+        "zone_json": result_path,
+        "input_arguments": {"area_name": area_name, "area_type": area_type},
+    }
 
 
 @mcp.tool(name="build_map")
 def build_map(
-    images_json: list[str | dict[str, Any]],
-    feature_collection_json: str | dict[str, Any],
+    images_paths: list[str],
+    feature_collection_path: str,
     color_palettes: list[list[str]],
     names: list[str],
 ) -> dict[str, Any]:
-    """Build a map from images and vector data and save it to an HTML file.
+    """Generate an interactive HTML map visualization with multiple image layers.
 
-    Creates an interactive map by overlaying Earth Engine images on top of vector data
-    (e.g. administrative boundaries). The map is saved as an HTML file that can be viewed
-    in a web browser.
-
-    Each image will be a different layer in the map, with its own color palette and name.
+    This function creates an interactive web map that displays multiple image layers
+    with custom color palettes and names. Each image is rendered as a separate layer
+    that can be toggled on/off. A feature collection can be overlaid to show
+    geographic boundaries or regions of interest.
 
     Args:
-        images_json: List of JSON strings of the Earth Engine images to display on the map
-        feature_collection_json: JSON string of the vector data (e.g. GeoJSON) defining the
-            boundaries to overlay the images on
-        color_palettes: List of color palettes to use for each image layer. Each palette should
-            be a list of color strings (e.g. ["#ff0000", "#00ff00"])
-        names:  List of names for each image layer. Must match length of images_json.
+        images_paths (list[str]): List of paths to image JSON files to display as map layers.
+        feature_collection_path (str): Path to feature collection JSON file for boundary overlay.
+        color_palettes (list[list[str]]): List of color palettes for each image layer.
+        names (list[str]): List of display names for each image layer.
 
     Returns:
-        dict: A dictionary containing the HTML content of the map under the key 'html_content'
+        dict[str, Any]: Dictionary containing the HTML map content and input arguments.
+            - html_content (str): HTML content for the interactive map.
+            - input_arguments (dict): Contains color palettes and names used.
 
-    Use case:
-        Create an interactive map showing fire severity and population density in a region:
-        build_map(["fire_image.json", "population_density_image.json"], "country_boundaries.json",
-                 [["#ff0000", "#00ff00"], ["#0000ff", "#ffff00"]],
-                ["Fire Severity", "Population Density"])
+    Raises:
+        ValueError: If the number of color palettes or names doesn't match the number of images.
+
+    Example:
+        >>> build_map(
+        ...     ["data/session_123/flood.json", "data/session_123/drought.json"],
+        ...     "data/session_123/countries.json",
+        ...     [["#blue", "#darkblue"], ["#yellow", "#red"]],
+        ...     ["Flood Risk", "Drought Risk"]
+        ... )
+        {
+            "html_content": "<html>...</html>",
+            "input_arguments": {
+                "color_palettes": [["#blue", "#darkblue"], ["#yellow", "#red"]],
+                "names": ["Flood Risk", "Drought Risk"]
+            }
+        }
     """
-    logger.info("Called build_map with %d images", len(images_json))
-    if len(images_json) != len(color_palettes):
+    logger.info("Called build_map with %d images", len(images_paths))
+    if len(images_paths) != len(color_palettes):
         msg = "The number of color palettes must match the number of images"
         logger.exception(msg)
         raise ValueError(msg)
-    if len(images_json) != len(names):
+    if len(images_paths) != len(names):
         msg = "The number of names must match the number of images"
         logger.exception(msg)
         raise ValueError(msg)
-
-    images_json = [safe_json_loads(str(image_json)) for image_json in images_json]
-
-    feature_collection_json = safe_json_loads(str(feature_collection_json))
-
-    res = handle_build_map(images_json, feature_collection_json, color_palettes, names)  # type: ignore[arg-type]
+    res = handle_build_map(images_paths, feature_collection_path, color_palettes, names)  # type: ignore[arg-type]
     logger.info("Successfully built map")
     return {
         "html_content": res,
@@ -496,7 +581,7 @@ def delete_temp_dir(trace_id: str) -> dict[str, Any]:
         msg = f"Failed to delete temporary directory {temp_dir}: {e}"
         logger.exception(msg)
         return {
-            "result": "Failed to delete temporary directory",
+            "result": msg,
             "input_arguments": {"temp_dir": str(temp_dir)},
         }
 

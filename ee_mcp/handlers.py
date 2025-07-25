@@ -6,7 +6,6 @@ import geemap.foliumap as geemap
 import pycountry
 from constants import ADMIN_LEVEL_1_BOUNDRIES_DATASET, COUNTRY_BOUNDRIES_DATASET
 from datasets import load_datasets_metadata
-from ee.deserializer import fromJSON
 from ee.ee_number import Number
 from ee.errormargin import ErrorMargin
 from ee.feature import Feature
@@ -17,6 +16,7 @@ from ee.imagecollection import ImageCollection
 from ee.reducer import Reducer
 from logging_config import get_logger
 from schemas import AREA_TYPES, REDUCERS, DatasetMetadata
+from utils import load_ee_object
 
 logger = get_logger(__name__)
 
@@ -78,27 +78,37 @@ def handle_get_dataset_image(
     return image.serialize()
 
 
-def handle_mask_image(image_json: str, mask_image_json: str) -> str:
+def handle_mask_image(image_path: str, mask_image_path: str) -> str:
     """Mask an Earth Engine image based on a mask.
 
     Args:
-        image_json: JSON string of the Earth Engine image
-        mask_image_json: JSON string of the Earth Engine binary image mask.
+        image_path: Path to the Earth Engine image
+        mask_image_path: Path to the Earth Engine binary image mask.
 
     Returns:
         str: JSON string of the masked Earth Engine image
     """
-    image: Image = fromJSON(image_json)
-    mask: Image = fromJSON(mask_image_json)
-    masked_image = image.updateMask(mask)
-    return masked_image.serialize()
+    image = load_ee_object(image_path)
+    if not isinstance(image, Image):
+        msg = "Image must be an Earth Engine image"
+        logger.exception(msg)
+        raise TypeError(msg)
+
+    mask_image = load_ee_object(mask_image_path)
+    if not isinstance(mask_image, Image):
+        msg = "Image and mask image must be Earth Engine images"
+        logger.exception(msg)
+        raise TypeError(msg)
+
+    masked_image = image.updateMask(mask_image)
+    return masked_image.serialize()  # type: ignore[return-value]
 
 
-def handle_filter_image_by_threshold(image_json: str, threshold: float) -> str:
+def handle_filter_image_by_threshold(image_path: str, threshold: float) -> str:
     """Filter an Earth Engine image based on a threshold value.
 
     Args:
-        image_json: JSON string of the Earth Engine image
+        image_path: Path to the Earth Engine image
         threshold: Numeric value to use as the threshold for filtering
 
     Returns:
@@ -107,64 +117,88 @@ def handle_filter_image_by_threshold(image_json: str, threshold: float) -> str:
     Raises:
         TypeError: If the loaded data is not an Earth Engine Image object
     """
-    image = fromJSON(image_json)
+    image = load_ee_object(image_path)
+    if not isinstance(image, Image):
+        msg = "Image must be an Earth Engine image"
+        logger.exception(msg)
+        raise TypeError(msg)
 
     # Create a mask where values are less than threshold
     threshold_ee: Number = Number(threshold)
     filtered_mask: Image = image.lt(threshold_ee) if threshold < 0 else image.gt(threshold_ee)
-
+    logger.info("Filtered mask successfully created")
     return filtered_mask.serialize()
 
 
 def handle_union_binary_images(
-    binary_images_jsons: list[str],
+    binary_images_paths: list[str],
 ) -> str:
     """Union multiple binary images.
 
     Args:
-        binary_images_jsons: List of JSON strings of the binary images to union.
-            Each JSON should point to a valid Earth Engine Image.
+        binary_images_paths: List of paths to the binary images to union.
+            Each path should point to a valid Earth Engine Image.
 
     Returns:
-        str: JSON string of the union result
+        str: Path to the union result
     """
     # Unmask the image to ensure non-data is treated as 0
-    union: Image = fromJSON(binary_images_jsons[0]).unmask(0)
-    for i, path in enumerate(binary_images_jsons[1:], 1):
-        logger.debug("Processing image %d of %d for union", i + 1, len(binary_images_jsons))
-        new_data: Image = fromJSON(path).unmask(0)
-        union = union.Or(new_data)
+    union = load_ee_object(binary_images_paths[0])
+    if not isinstance(union, Image):
+        msg = "Union must be an Earth Engine image"
+        logger.exception(msg)
+        raise TypeError(msg)
+
+    union = union.unmask(0)
+    for i, path in enumerate(binary_images_paths[1:], 1):
+        logger.debug("Processing image %d of %d for union", i + 1, len(binary_images_paths))
+        new_data = load_ee_object(path)
+        if not isinstance(new_data, Image):
+            msg = "New data must be an Earth Engine image"
+            logger.exception(msg)
+            raise TypeError(msg)
+        union = union.Or(new_data.unmask(0))
 
     return union.serialize()
 
 
 def handle_intersect_binary_images(
-    binary_images_jsons: list[str],
+    binary_images_paths: list[str],
 ) -> str:
     """Intersect multiple binary images.
 
     Args:
-        binary_images_jsons: List of JSON strings of the binary images to intersect.
-            Each JSON should point to a valid Earth Engine Image.
+        binary_images_paths: List of paths to the binary images to intersect.
+            Each path should point to a valid Earth Engine Image.
 
     Returns:
         str: JSON string of the intersection result
     """
-    intersection: Image = fromJSON(binary_images_jsons[0])
-    for i, path in enumerate(binary_images_jsons[1:], 1):
-        logger.debug("Processing image %d of %d for intersection", i + 1, len(binary_images_jsons))
-        new_data: Image = fromJSON(path)
-        intersection = intersection.And(new_data)
+    intersection = load_ee_object(binary_images_paths[0])
+    if not isinstance(intersection, Image):
+        msg = "Intersection must be an Earth Engine image"
+        logger.exception(msg)
+        raise TypeError(msg)
+
+    intersection = intersection.unmask(0)
+    for i, path in enumerate(binary_images_paths[1:], 1):
+        logger.debug("Processing image %d of %d for intersection", i + 1, len(binary_images_paths))
+        new_data = load_ee_object(path)
+        if not isinstance(new_data, Image):
+            msg = "New data must be an Earth Engine image"
+            logger.exception(msg)
+            raise TypeError(msg)
+        intersection = intersection.And(new_data.unmask(0))
 
     return intersection.serialize()
 
 
-def handle_intersect_feature_collections(feature_collections_jsons: list[str]) -> str:
+def handle_intersect_feature_collections(feature_collections_paths: list[str]) -> str:
     """Perform a geometric intersection of multiple feature collections.
 
     Args:
-        feature_collections_jsons: List of JSON strings of the feature collections to intersect.
-            Each JSON should point to a valid Earth Engine FeatureCollection.
+        feature_collections_paths: List of paths to the feature collections to intersect.
+            Each path should point to a valid Earth Engine FeatureCollection.
 
     Returns:
         str: JSON string of the intersection result
@@ -172,19 +206,19 @@ def handle_intersect_feature_collections(feature_collections_jsons: list[str]) -
     Raises:
         TypeError: If any input is an Image
     """
-    intersection = fromJSON(feature_collections_jsons[0])
+    intersection = load_ee_object(feature_collections_paths[0])
     if isinstance(intersection, Image):
         msg = "Image cannot be intersected"
         logger.exception(msg)
         raise TypeError(msg)
 
-    for i, path in enumerate(feature_collections_jsons[1:], 1):
+    for i, path in enumerate(feature_collections_paths[1:], 1):
         logger.debug(
             "Processing feature collection %d of %d for intersection",
             i + 1,
-            len(feature_collections_jsons),
+            len(feature_collections_paths),
         )
-        new_fc = fromJSON(path)
+        new_fc = load_ee_object(path)
         if isinstance(new_fc, Image):
             msg = "Image cannot be intersected"
             logger.exception(msg)
@@ -196,12 +230,12 @@ def handle_intersect_feature_collections(feature_collections_jsons: list[str]) -
     return intersection.serialize()
 
 
-def handle_merge_feature_collections(feature_collections_jsons: list[str]) -> str:
+def handle_merge_feature_collections(feature_collections_paths: list[str]) -> str:
     """Merge multiple feature collections into a single combined collection.
 
     Args:
-        feature_collections_jsons: List of JSON strings of the feature collections to merge.
-            Each JSON should point to a valid Earth Engine FeatureCollection.
+        feature_collections_paths: List of paths to the feature collections to merge.
+            Each path should point to a valid Earth Engine FeatureCollection.
 
     Returns:
         str: JSON string of the merged result
@@ -209,19 +243,19 @@ def handle_merge_feature_collections(feature_collections_jsons: list[str]) -> st
     Raises:
         TypeError: If any input is an Image
     """
-    union = fromJSON(feature_collections_jsons[0])
+    union = load_ee_object(feature_collections_paths[0])
     if isinstance(union, Image):
         msg = "Image cannot be unioned"
         logger.exception(msg)
         raise TypeError(msg)
 
-    for i, path in enumerate(feature_collections_jsons[1:], 1):
+    for i, path in enumerate(feature_collections_paths[1:], 1):
         logger.debug(
             "Processing feature collection %d of %d for merge",
             i + 1,
-            len(feature_collections_jsons),
+            len(feature_collections_paths),
         )
-        new_data = fromJSON(path)
+        new_data = load_ee_object(path)
         if isinstance(new_data, Image):
             msg = "Image cannot be unioned"
             logger.exception(msg)
@@ -250,16 +284,16 @@ def intersect_feature(feature: Feature, feature_collection: FeatureCollection) -
 
 
 def handle_reduce_image(
-    image_json: str,
-    feature_collection_json: str,
+    image_path: str,
+    feature_collection_path: str,
     reducer: REDUCERS,
     scale: float = 92.76624195666344,  # scale of child population data
 ) -> float:
     """Reduce an image by applying a reducer to its pixels within specified regions.
 
     Args:
-        image_json: The JSON string of the image to reduce
-        feature_collection_json: The JSON string of the geometry to reduce the image to
+        image_path: The path to the image to reduce
+        feature_collection_path: The path to the geometry to reduce the image to
         reducer: The reducer to apply
         scale: The scale of the image. It should be 100 unless otherwise specified.
 
@@ -269,8 +303,18 @@ def handle_reduce_image(
     Raises:
         ValueError: If no statistics are found
     """
-    image: Image = fromJSON(image_json)
-    feature_collection: FeatureCollection = fromJSON(feature_collection_json)
+    image = load_ee_object(image_path)
+    if not isinstance(image, Image):
+        msg = "Image must be an Earth Engine image"
+        logger.exception(msg)
+        raise TypeError(msg)
+
+    feature_collection = load_ee_object(feature_collection_path)
+    if not isinstance(feature_collection, FeatureCollection):
+        msg = "Feature collection must be an Earth Engine feature collection"
+        logger.exception(msg)
+        raise TypeError(msg)
+
     reduced = image.reduceRegions(
         reducer=getattr(Reducer, reducer)(),
         collection=feature_collection,
@@ -385,16 +429,16 @@ def get_country_code(country: str) -> str:
 
 
 def handle_build_map(
-    images_json: list[str],
-    feature_collection_json: str,
+    images_paths: list[str],
+    feature_collection_path: str,
     color_palettes: list[list[str]],
     names: list[str],
 ) -> str:
     """Build a map from images and vector data and save it to an HTML file.
 
     Args:
-        images_json: List of JSON strings of the Earth Engine images to display on the map
-        feature_collection_json: JSON string of the vector data (e.g. GeoJSON) defining the
+        images_paths: List of paths to the Earth Engine images to display on the map
+        feature_collection_path: Path to the vector data (e.g. GeoJSON) defining the
             boundaries to overlay the images on
         color_palettes: List of color palettes to use for each image layer. Each palette should
             be a list of color strings (e.g. ["#ff0000", "#00ff00"])
@@ -404,8 +448,21 @@ def handle_build_map(
         str: The filename of the saved HTML map file
     """
     # Deserialize the JSON strings to Earth Engine objects
-    images = [fromJSON(image_json) for image_json in images_json]
-    vector_data = fromJSON(feature_collection_json)
+    images: list[Image] = []
+    for image_path in images_paths:
+        image = load_ee_object(image_path)
+        if not isinstance(image, Image):
+            msg = "Image must be an Earth Engine image"
+            logger.exception(msg)
+            raise TypeError(msg)
+        images.append(image)
+
+    vector_data = load_ee_object(feature_collection_path)
+
+    if not isinstance(vector_data, FeatureCollection):
+        msg = "Vector data must be an Earth Engine FeatureCollection"
+        logger.exception(msg)
+        raise TypeError(msg)
 
     demographic_map = geemap.Map(basemap="UN.ClearMap")
 
