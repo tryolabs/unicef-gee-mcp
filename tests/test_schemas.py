@@ -6,6 +6,7 @@ from typing import cast
 from schemas import AREA_TYPES, REDUCERS, Config, DatasetMetadata, ServerConfig, Transport
 
 PORT = 8080
+HOST = "0.0.0.0"  # noqa: S104
 
 
 class TestServerConfig:
@@ -13,29 +14,30 @@ class TestServerConfig:
 
     def test_server_config_creation_valid_transport(self) -> None:
         """Test ServerConfig creation with valid transport."""
-        config = ServerConfig(port=PORT, transport="stdio")
+        config = ServerConfig(port=PORT, transport="stdio", host=HOST)
         assert config.port == PORT
         assert config.transport == "stdio"
+        assert config.host == HOST
 
     def test_server_config_creation_all_transports(self) -> None:
         """Test ServerConfig creation with all valid transports."""
         valid_transports = ["stdio", "sse", "streamable-http"]
         for transport in valid_transports:
-            config = ServerConfig(port=PORT, transport=cast("Transport", transport))
+            config = ServerConfig(port=PORT, transport=cast("Transport", transport), host=HOST)
             assert config.transport == transport
 
     def test_server_config_equality(self) -> None:
         """Test ServerConfig equality comparison."""
-        config1 = ServerConfig(port=PORT, transport="stdio")
-        config2 = ServerConfig(port=PORT, transport="stdio")
-        config3 = ServerConfig(port=9090, transport="stdio")
+        config1 = ServerConfig(port=PORT, transport="stdio", host=HOST)
+        config2 = ServerConfig(port=PORT, transport="stdio", host=HOST)
+        config3 = ServerConfig(port=9090, transport="stdio", host=HOST)
 
         assert config1 == config2
         assert config1 != config3
 
     def test_server_config_string_representation(self) -> None:
         """Test ServerConfig string representation."""
-        config = ServerConfig(port=PORT, transport="stdio")
+        config = ServerConfig(port=PORT, transport="stdio", host=HOST)
         assert f"{PORT}" in str(config)
         assert "stdio" in str(config)
 
@@ -45,7 +47,7 @@ class TestConfig:
 
     def test_config_creation(self) -> None:
         """Test Config creation with valid parameters."""
-        server_config = ServerConfig(port=PORT, transport="stdio")
+        server_config = ServerConfig(port=PORT, transport="stdio", host=HOST)
         metadata_path = Path("/path/to/metadata.yaml")
         auth_path = Path("/path/to/auth.json")
 
@@ -59,7 +61,7 @@ class TestConfig:
 
     def test_config_with_relative_paths(self) -> None:
         """Test Config creation with relative paths."""
-        server_config = ServerConfig(port=PORT, transport="sse")
+        server_config = ServerConfig(port=PORT, transport="sse", host=HOST)
         metadata_path = Path("metadata.yaml")
         auth_path = Path("auth.json")
 
@@ -72,7 +74,7 @@ class TestConfig:
 
     def test_config_equality(self) -> None:
         """Test Config equality comparison."""
-        server_config = ServerConfig(port=PORT, transport="stdio")
+        server_config = ServerConfig(port=PORT, transport="stdio", host=HOST)
         metadata_path = Path("/path/to/metadata.yaml")
         auth_path = Path("/path/to/auth.json")
 
