@@ -198,6 +198,7 @@ def mask_image(
 def filter_image_by_threshold(
     image_path: str,
     threshold: float,
+    result_name: str,
 ) -> dict[str, Any]:
     """Filter an image by applying a threshold to create a binary mask.
 
@@ -208,6 +209,7 @@ def filter_image_by_threshold(
     Args:
         image_path (str): Path to the input image JSON file to be filtered.
         threshold (float): Threshold value used for filtering. Pixels above this value are kept.
+        result_name (str): Name for the output filtered image file (without extension).
 
     Returns:
         dict[str, Any]: Dictionary containing the filtered image path and input arguments.
@@ -215,10 +217,14 @@ def filter_image_by_threshold(
             - input_arguments (dict): Contains the threshold value used.
 
     Example:
-        >>> filter_image_by_threshold("data/session_123/precipitation.json", 50.0)
+        >>> filter_image_by_threshold(
+        ...     "data/session_123/precipitation.json",
+        ...     50.0,
+        ...     "filtered_precipitation",
+        ... )
         {
-            "image_path": "data/session_123/filtered-image.json",
-            "input_arguments": {"threshold": 50.0}
+            "image_path": "data/session_123/filtered_precipitation.json",
+            "input_arguments": {"threshold": 50.0, "result_name": "filtered_precipitation"}
         }
     """
     try:
@@ -228,7 +234,7 @@ def filter_image_by_threshold(
             threshold,
         )
         res = handle_filter_image_by_threshold(image_path, threshold)
-        result_path = f"{'/'.join(image_path.split('/')[:-1])}/filtered-image.json"
+        result_path = f"{'/'.join(image_path.split('/')[:-1])}/{result_name}.json"
         save_ee_object(result_path, res)
         logger.info("Successfully filtered image by threshold %s", threshold)
     except Exception as e:
@@ -241,6 +247,7 @@ def filter_image_by_threshold(
 @mcp.tool(name="union_binary_images")
 def union_binary_images(
     binary_images_paths: list[str],
+    result_name: str,
 ) -> dict[str, Any]:
     """Perform a union operation on multiple binary images.
 
@@ -250,6 +257,7 @@ def union_binary_images(
 
     Args:
         binary_images_paths (list[str]): List of paths to binary image JSON files to union.
+        result_name (str): Name for the output union image file (without extension).
 
     Returns:
         dict[str, Any]: Dictionary containing the union result image path.
@@ -259,20 +267,26 @@ def union_binary_images(
         >>> union_binary_images([
         ...     "data/session_123/flood_mask.json",
         ...     "data/session_123/drought_mask.json",
-        ... ])
+        ... ],
+        ...     "union_result",
+        ... )
         {
-            "image_path": "data/session_123/union_result.json"
+            "image_path": "data/session_123/union_result.json",
+            "input_arguments": {"result_name": "union_result"}
         }
     """
     logger.info("Called union_binary_images with %d images", len(binary_images_paths))
     res = handle_union_binary_images(binary_images_paths)
     logger.info("Successfully performed union on %d binary images", len(binary_images_paths))
-    return {"image_path": res}
+    result_path = f"{'/'.join(binary_images_paths[0].split('/')[:-1])}/{result_name}.json"
+    save_ee_object(result_path, res)
+    return {"image_path": result_path}
 
 
 @mcp.tool(name="intersect_binary_images")
 def intersect_binary_images(
     binary_images_paths: list[str],
+    result_name: str,
 ) -> dict[str, Any]:
     """Perform an intersection operation on multiple binary images.
 
@@ -282,6 +296,7 @@ def intersect_binary_images(
 
     Args:
         binary_images_paths (list[str]): List of paths to binary image JSON files to intersect.
+        result_name (str): Name for the output intersection image file (without extension).
 
     Returns:
         dict[str, Any]: Dictionary containing the intersection result image path.
@@ -291,15 +306,18 @@ def intersect_binary_images(
         >>> intersect_binary_images([
         ...     "data/session_123/flood_areas.json",
         ...     "data/session_123/fire_areas.json",
-        ... ])
+        ... ],
+        ...     "flood_and_fire_areas",
+        ... )
         {
-            "image_path": "data/session_123/flood_and_fire_areas.json"
+            "image_path": "data/session_123/flood_and_fire_areas.json",
+            "input_arguments": {"result_name": "flood_and_fire_areas"}
         }
     """
     logger.info("Called intersect_binary_images with %d images", len(binary_images_paths))
     res = handle_intersect_binary_images(binary_images_paths)
     logger.info("Successfully performed intersection on %d binary images", len(binary_images_paths))
-    result_path = f"{'/'.join(binary_images_paths[0].split('/')[:-1])}/intersection.json"
+    result_path = f"{'/'.join(binary_images_paths[0].split('/')[:-1])}/{result_name}.json"
     save_ee_object(result_path, res)
     return {"image_path": result_path}
 
@@ -307,6 +325,7 @@ def intersect_binary_images(
 @mcp.tool(name="intersect_feature_collections")
 def intersect_feature_collections(
     feature_collections_paths: list[str],
+    result_name: str,
 ) -> dict[str, Any]:
     """Perform spatial intersection on multiple feature collections.
 
@@ -317,6 +336,8 @@ def intersect_feature_collections(
     Args:
         feature_collections_paths (list[str]): List of paths to feature collection JSON files
                                              to intersect.
+        result_name (str): Name for the output intersection feature collection file
+                        (without extension).
 
     Returns:
         dict[str, Any]: Dictionary containing:
@@ -327,9 +348,12 @@ def intersect_feature_collections(
         >>> intersect_feature_collections([
         ...     "data/session_456/country-zone.json",
         ...     "data/session_456/city-zone.json",
-        ... ])
+        ... ],
+        ...     "intersection",
+        ... )
         {
-            "feature_collection_path": "data/session_456/intersection.json"
+            "feature_collection_path": "data/session_456/intersection.json",
+            "input_arguments": {"result_name": "intersection"}
         }
     """
     logger.info(
@@ -341,7 +365,7 @@ def intersect_feature_collections(
         "Successfully performed intersection on %d feature collections",
         len(feature_collections_paths),
     )
-    result_path = f"{'/'.join(feature_collections_paths[0].split('/')[:-1])}/intersection.json"
+    result_path = f"{'/'.join(feature_collections_paths[0].split('/')[:-1])}/{result_name}.json"
     save_ee_object(result_path, res)
     return {"feature_collection_path": result_path}
 
@@ -349,6 +373,7 @@ def intersect_feature_collections(
 @mcp.tool(name="merge_feature_collections")
 def merge_feature_collections(
     feature_collections_paths: list[str],
+    result_name: str,
 ) -> dict[str, Any]:
     """Merge multiple feature collections into a single collection.
 
@@ -359,6 +384,7 @@ def merge_feature_collections(
     Args:
         feature_collections_paths (list[str]): List of paths to feature collection JSON files
                                                 to merge.
+        result_name (str): Name for the output merged feature collection file (without extension).
 
     Returns:
         dict[str, Any]: Dictionary containing:
@@ -368,10 +394,12 @@ def merge_feature_collections(
         >>> merge_feature_collections([
         ...     "data/session_123/uruguay-zone.json",
         ...     "data/session_123/argentina-zone.json",
-        ... ])
+        ... ],
+        ...     "uruguay_and_argentina-zone",
+        ... )
         {
-            "feature_collection_path": "data/session_123/uruguay_and_argentina-zone.json"
-
+            "feature_collection_path": "data/session_123/uruguay_and_argentina-zone.json",
+            "input_arguments": {"result_name": "uruguay_and_argentina-zone"}
         }
     """
     logger.info(
@@ -380,7 +408,7 @@ def merge_feature_collections(
     )
     res = handle_merge_feature_collections(feature_collections_paths)
     logger.info("Successfully merged %d feature collections", len(feature_collections_paths))
-    result_path = f"{'/'.join(feature_collections_paths[0].split('/')[:-1])}/merged.json"
+    result_path = f"{'/'.join(feature_collections_paths[0].split('/')[:-1])}/{result_name}.json"
     save_ee_object(result_path, res)
     return {"feature_collection_path": result_path}
 
@@ -390,6 +418,7 @@ def reduce_image(
     image_path: str,
     feature_collection_path: str,
     reducer: REDUCERS,
+    scale: float = 92.76624195666344,
 ) -> dict[str, Any]:
     """Perform statistical reduction of image data within feature collection boundaries.
 
@@ -403,6 +432,7 @@ def reduce_image(
         feature_collection_path (str): Path to feature collection JSON file defining the reduction
                                        boundaries.
         reducer (REDUCERS): Type of statistical reduction to perform.
+        scale (float): Scale of the image. Do not use this parameter unless otherwise specified.
 
     Returns:
         dict[str, Any]: Dictionary containing the aggregation result and input arguments.
@@ -430,7 +460,7 @@ def reduce_image(
         logger.exception(msg)
         raise ValueError(msg)
 
-    res = handle_reduce_image(image_path, feature_collection_path, reducer)
+    res = handle_reduce_image(image_path, feature_collection_path, reducer, scale)
     logger.info("Successfully reduced image with reducer %s, result: %s", reducer, res)
 
     return {"aggregation_result": res, "input_arguments": {"reducer": reducer}}
@@ -455,7 +485,7 @@ def get_zone_of_area(
 
     Returns:
         dict[str, Any]: Dictionary containing:
-            - zone_json (str): Path to the saved zone feature collection JSON file.
+            - zone_path (str): Path to the saved zone feature collection JSON file.
             - input_arguments (dict): Contains the area name and type used.
 
     Raises:
@@ -464,7 +494,7 @@ def get_zone_of_area(
     Example:
         >>> get_zone_of_area("Kenya", "country", "session_123")
         {
-            "zone_json": "data/session_123/zone-Kenya.json",
+            "zone_path": "data/session_123/zone-Kenya.json",
             "input_arguments": {"area_name": "Kenya", "area_type": "country"}
         }
     """
@@ -480,7 +510,7 @@ def get_zone_of_area(
     save_ee_object(result_path, res)
     logger.info("Saved zone to %s", result_path)
     return {
-        "zone_json": result_path,
+        "zone_path": result_path,
         "input_arguments": {"area_name": area_name, "area_type": area_type},
     }
 

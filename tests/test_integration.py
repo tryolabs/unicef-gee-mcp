@@ -8,7 +8,6 @@ from typing import Any
 import numpy as np
 import pytest
 import yaml
-from ee.deserializer import fromJSON
 from ee.feature import Feature
 from ee.featurecollection import FeatureCollection
 from ee.geometry import Geometry
@@ -26,6 +25,7 @@ from ee_mcp.server import (
     reduce_image,
     union_binary_images,
 )
+from ee_mcp.utils import load_ee_object, save_ee_object
 
 
 @pytest.fixture(name="test_metadata_file")
@@ -126,7 +126,7 @@ def check_coordinates_match(
     Returns:
         bool: True if coordinates match within tolerance
     """
-    actual_feature_collection_info: Any = fromJSON(actual_feature_collection).getInfo()
+    actual_feature_collection_info: Any = load_ee_object(actual_feature_collection).getInfo()
 
     coords: Any = actual_feature_collection_info["features"][0]["geometry"]["coordinates"][0]
 
@@ -193,76 +193,86 @@ class TestMCPServerIntegration:
 
     def test_get_dataset_image_endpoint(self) -> None:
         """Test the get_dataset_image endpoint with real data."""
-        result = get_dataset_image("children_population")
+        result = get_dataset_image("children_population", trace_id="123")
 
-        assert "image_json" in result
-        assert isinstance(result["image_json"], str)
-        assert len(result["image_json"]) > 0
+        assert "image_path" in result
+        assert isinstance(result["image_path"], str)
+        assert len(result["image_path"]) > 0
 
     def test_get_dataset_image_invalid_dataset(self) -> None:
         """Test error handling for invalid dataset."""
         with pytest.raises(ValueError, match="Invalid dataset"):
-            get_dataset_image("nonexistent_dataset")
+            get_dataset_image("nonexistent_dataset", trace_id="123")
 
     def test_filter_image_by_threshold_endpoint(self) -> None:
         """Test the filter_image_by_threshold endpoint."""
-        image_result = get_dataset_image("river_flood")
-        image_json = image_result["image_json"]
+        image_result = get_dataset_image("river_flood", trace_id="123")
+        image_path = image_result["image_path"]
 
-        result = filter_image_by_threshold(image_json, 0.5)
+        result = filter_image_by_threshold(image_path, 0.5, "test_filtered_image")
 
-        assert "image_json" in result
-        assert isinstance(result["image_json"], str)
-        assert len(result["image_json"]) > 0
+        assert "image_path" in result
+        assert isinstance(result["image_path"], str)
+        assert len(result["image_path"]) > 0
 
     def test_mask_image_endpoint(self) -> None:
         """Test the mask_image endpoint."""
-        image_result = get_dataset_image("river_flood")
-        mask_result = get_dataset_image("agricultural_drought")
+        image_result = get_dataset_image("river_flood", trace_id="123")
+        mask_result = get_dataset_image("agricultural_drought", trace_id="123")
 
-        result = mask_image(image_result["image_json"], mask_result["image_json"])
+        result = mask_image(
+            image_result["image_path"], mask_result["image_path"], "test_masked_image"
+        )
 
-        assert "image_json" in result
-        assert isinstance(result["image_json"], str)
-        assert len(result["image_json"]) > 0
+        assert "image_path" in result
+        assert isinstance(result["image_path"], str)
+        assert len(result["image_path"]) > 0
 
     def test_union_binary_images_endpoint(self) -> None:
         """Test the union_binary_images endpoint."""
-        image1_result = get_dataset_image("river_flood")
-        image2_result = get_dataset_image("agricultural_drought")
+        image1_result = get_dataset_image("river_flood", trace_id="123")
+        image2_result = get_dataset_image("agricultural_drought", trace_id="123")
 
-        binary1_result = filter_image_by_threshold(image1_result["image_json"], 0.5)
-        binary2_result = filter_image_by_threshold(image2_result["image_json"], 75.0)
+        binary1_result = filter_image_by_threshold(image1_result["image_path"], 0.5, "binary1_test")
+        binary2_result = filter_image_by_threshold(
+            image2_result["image_path"], 75.0, "binary2_test"
+        )
 
-        result = union_binary_images([binary1_result["image_json"], binary2_result["image_json"]])
+        result = union_binary_images(
+            [binary1_result["image_path"], binary2_result["image_path"]], "test_union_result"
+        )
 
-        assert "image_json" in result
-        assert isinstance(result["image_json"], str)
-        assert len(result["image_json"]) > 0
+        assert "image_path" in result
+        assert isinstance(result["image_path"], str)
+        assert len(result["image_path"]) > 0
 
     def test_intersect_binary_images_endpoint(self) -> None:
         """Test the intersect_binary_images endpoint."""
-        image1_result = get_dataset_image("river_flood")
-        image2_result = get_dataset_image("agricultural_drought")
+        image1_result = get_dataset_image("river_flood", trace_id="123")
+        image2_result = get_dataset_image("agricultural_drought", trace_id="123")
 
-        binary1_result = filter_image_by_threshold(image1_result["image_json"], 0.5)
-        binary2_result = filter_image_by_threshold(image2_result["image_json"], 75.0)
-
-        result = intersect_binary_images(
-            [binary1_result["image_json"], binary2_result["image_json"]]
+        binary1_result = filter_image_by_threshold(
+            image1_result["image_path"], 0.5, "binary1_intersect"
+        )
+        binary2_result = filter_image_by_threshold(
+            image2_result["image_path"], 75.0, "binary2_intersect"
         )
 
-        assert "image_json" in result
-        assert isinstance(result["image_json"], str)
-        assert len(result["image_json"]) > 0
+        result = intersect_binary_images(
+            [binary1_result["image_path"], binary2_result["image_path"]], "test_intersect_result"
+        )
+
+        assert "image_path" in result
+        assert isinstance(result["image_path"], str)
+        assert len(result["image_path"]) > 0
 
     def test_reduce_image_endpoint(self) -> None:
         """Test the reduce_image endpoint."""
-        image_result = get_dataset_image("children_population")
+        image_result = get_dataset_image("children_population", trace_id="123")
 
-        zone_result = get_zone_of_area("THA", "country")
+        zone_result = get_zone_of_area("THA", "country", trace_id="123")
 
-        result = reduce_image(image_result["image_json"], zone_result["zone_json"], "mean", 100.0)
+        result = reduce_image(image_result["image_path"], zone_result["zone_path"], "mean")
 
         assert "aggregation_result" in result
         assert isinstance(result["aggregation_result"], int | float)
@@ -274,22 +284,20 @@ class TestMCPServerErrorHandling:
     def test_invalid_area_type(self) -> None:
         """Test error handling for invalid area type."""
         with pytest.raises((ValueError, TypeError)):
-            get_zone_of_area("THA", "invalid_type")
+            get_zone_of_area("THA", "invalid_type", trace_id="123")
 
     def test_invalid_reducer_type(self) -> None:
         """Test error handling for invalid reducer type."""
-        image_result = get_dataset_image("children_population")
-        zone_result = get_zone_of_area("THA", "country")
+        image_result = get_dataset_image("children_population", trace_id="123")
+        zone_result = get_zone_of_area("THA", "country", trace_id="123")
 
         with pytest.raises((ValueError, TypeError)):
-            reduce_image(
-                image_result["image_json"], zone_result["zone_json"], "invalid_reducer", 100.0
-            )
+            reduce_image(image_result["image_path"], zone_result["zone_path"], "invalid_reducer")
 
     def test_invalid_json_input(self) -> None:
         """Test error handling for invalid JSON input."""
         with pytest.raises((ValueError, TypeError, json.JSONDecodeError)):
-            filter_image_by_threshold("invalid_json", 0.5)
+            filter_image_by_threshold("invalid_json", 0.5, "test_invalid")
 
 
 class TestMCPServerEdgeCases:
@@ -297,41 +305,45 @@ class TestMCPServerEdgeCases:
 
     def test_extreme_threshold_values(self) -> None:
         """Test filtering with extreme threshold values."""
-        image_result = get_dataset_image("river_flood")
+        image_result = get_dataset_image("river_flood", trace_id="123")
 
-        result_large = filter_image_by_threshold(image_result["image_json"], 1e10)
-        assert "image_json" in result_large
-        assert isinstance(result_large["image_json"], str)
+        result_large = filter_image_by_threshold(
+            image_result["image_path"], 1e10, "test_large_threshold"
+        )
+        assert "image_path" in result_large
+        assert isinstance(result_large["image_path"], str)
 
-        result_small = filter_image_by_threshold(image_result["image_json"], -1e10)
-        assert "image_json" in result_small
-        assert isinstance(result_small["image_json"], str)
+        result_small = filter_image_by_threshold(
+            image_result["image_path"], -1e10, "test_small_threshold"
+        )
+        assert "image_path" in result_small
+        assert isinstance(result_small["image_path"], str)
 
     def test_multiple_binary_images_union(self) -> None:
         """Test union with multiple binary images."""
         images: list[str] = []
         for dataset in ["river_flood", "agricultural_drought", "children_population"]:
-            image_result = get_dataset_image(dataset)
-            binary_result = filter_image_by_threshold(image_result["image_json"], 0.5)
-            images.append(binary_result["image_json"])
+            image_result = get_dataset_image(dataset, trace_id="123")
+            binary_result = filter_image_by_threshold(
+                image_result["image_path"], 0.5, f"binary_{dataset}"
+            )
+            images.append(binary_result["image_path"])
 
-        result = union_binary_images(images)
+        result = union_binary_images(images, "test_multiple_union")
 
-        assert "image_json" in result
-        assert isinstance(result["image_json"], str)
-        assert len(result["image_json"]) > 0
+        assert "image_path" in result
+        assert isinstance(result["image_path"], str)
+        assert len(result["image_path"]) > 0
 
     def test_different_reducer_types(self) -> None:
         """Test reduce_image with different reducer types."""
-        image_result = get_dataset_image("children_population")
-        zone_result = get_zone_of_area("THA", "country")
+        image_result = get_dataset_image("children_population", trace_id="123")
+        zone_result = get_zone_of_area("THA", "country", trace_id="123")
 
         reducers = ["mean", "max", "min", "sum"]
 
         for reducer in reducers:
-            result = reduce_image(
-                image_result["image_json"], zone_result["zone_json"], reducer, 100.0
-            )
+            result = reduce_image(image_result["image_path"], zone_result["zone_path"], reducer)
             assert "aggregation_result" in result
             assert isinstance(result["aggregation_result"], int | float)
 
@@ -341,49 +353,52 @@ class TestMCPServerPerformance:
 
     def test_concurrent_calls_simulation(self) -> None:
         """Test multiple sequential calls to simulate concurrent usage."""
-        image_result = get_dataset_image("river_flood")
+        image_result = get_dataset_image("river_flood", trace_id="123")
 
         results: list[dict[str, Any]] = []
         for i in range(3):
-            result = filter_image_by_threshold(image_result["image_json"], float(i + 1))
+            result = filter_image_by_threshold(
+                image_result["image_path"], float(i + 1), f"concurrent_test_{i}"
+            )
             results.append(result)
 
         assert len(results) == 3  # noqa: PLR2004
         for result in results:
-            assert "image_json" in result
-            assert isinstance(result["image_json"], str)
+            assert "image_path" in result
+            assert isinstance(result["image_path"], str)
 
     def test_large_feature_collection_operations(self) -> None:
         """Test operations with larger feature collections."""
         zones: list[str] = []
         for country in ["THA", "IDN", "PHL"]:
             try:
-                zone_result = get_zone_of_area(country, "country")
-                zones.append(zone_result["zone_json"])
+                zone_result = get_zone_of_area(country, "country", trace_id="123")
+                zones.append(zone_result["zone_path"])
             except ValueError:
                 continue
 
-        result = merge_feature_collections(zones)
-        assert "feature_collection_json" in result
-        assert isinstance(result["feature_collection_json"], str)
-        assert len(result["feature_collection_json"]) > 0
+        result = merge_feature_collections(zones, "test_large_merge")
+        assert "feature_collection_path" in result
+        assert isinstance(result["feature_collection_path"], str)
+        assert len(result["feature_collection_path"]) > 0
 
 
 class TestMCPServerOutputs:
-    def test_intersect_feature_collection_result(
-        self, rectangle_test_data: dict[str, FeatureCollection]
-    ) -> None:
+    def test_intersect_feature_collection_result(self, rectangle_test_data: dict[str, str]) -> None:
         """Test that intersecting two rectangles produces the expected coordinates."""
+        save_ee_object("data/123/rectangle_1.json", rectangle_test_data["rectangle_1"])
+        save_ee_object("data/123/rectangle_2.json", rectangle_test_data["rectangle_2"])
         intersection_feature_data = intersect_feature_collections(
             [
-                rectangle_test_data["rectangle_1"],
-                rectangle_test_data["rectangle_2"],
+                "data/123/rectangle_1.json",
+                "data/123/rectangle_2.json",
             ],
+            "test_intersection_result",
         )
 
         expected_coords: list[list[float]] = [[-103, 38.5], [-102, 38.5], [-102, 38], [-103, 38]]
         coords_match, actual_coords = check_coordinates_match(
-            intersection_feature_data["feature_collection_json"], expected_coords
+            intersection_feature_data["feature_collection_path"], expected_coords
         )
 
         assert (
@@ -391,19 +406,22 @@ class TestMCPServerOutputs:
         ), f"Intersection coordinates {actual_coords} do not match expected {expected_coords}"
 
     def test_intersect_feature_collection_result_not_matching(
-        self, rectangle_test_data: dict[str, FeatureCollection]
+        self, rectangle_test_data: dict[str, str]
     ) -> None:
         """Test that intersecting two rectangles fails with incorrect expected coordinates."""
+        save_ee_object("data/123/rectangle_1.json", rectangle_test_data["rectangle_1"])
+        save_ee_object("data/123/rectangle_2.json", rectangle_test_data["rectangle_2"])
         intersection_feature_data = intersect_feature_collections(
             [
-                rectangle_test_data["rectangle_1"],
-                rectangle_test_data["rectangle_2"],
+                "data/123/rectangle_1.json",
+                "data/123/rectangle_2.json",
             ],
+            "test_intersection_not_matching",
         )
 
         incorrect_coords: list[list[float]] = [[-104, 39.5], [-103, 39.5], [-103, 39], [-104, 39]]
         coords_match, actual_coords = check_coordinates_match(
-            intersection_feature_data["feature_collection_json"], incorrect_coords
+            intersection_feature_data["feature_collection_path"], incorrect_coords
         )
 
         assert not coords_match, (
@@ -413,15 +431,18 @@ class TestMCPServerOutputs:
 
     def test_merge_feature_collection_result(self, rectangle_test_data: dict[str, str]) -> None:
         """Test that merging two rectangles produces the expected coordinates."""
+        save_ee_object("data/123/rectangle_1.json", rectangle_test_data["rectangle_1"])
+        save_ee_object("data/123/rectangle_2.json", rectangle_test_data["rectangle_2"])
         merge_feature_data = merge_feature_collections(
             [
-                rectangle_test_data["rectangle_1"],
-                rectangle_test_data["rectangle_2"],
+                "data/123/rectangle_1.json",
+                "data/123/rectangle_2.json",
             ],
+            "test_merge_result",
         )
         expected_coords: list[list[float]] = [[-103, 39], [-102, 39], [-102, 37.5], [-103, 37.5]]
         coords_match, actual_coords = check_coordinates_match(
-            merge_feature_data["feature_collection_json"], expected_coords
+            merge_feature_data["feature_collection_path"], expected_coords
         )
 
         assert (
@@ -432,15 +453,18 @@ class TestMCPServerOutputs:
         self, rectangle_test_data: dict[str, str]
     ) -> None:
         """Test that merging two rectangles fails with incorrect expected coordinates."""
+        save_ee_object("data/123/rectangle_1.json", rectangle_test_data["rectangle_1"])
+        save_ee_object("data/123/rectangle_2.json", rectangle_test_data["rectangle_2"])
         merge_feature_data = merge_feature_collections(
             [
-                rectangle_test_data["rectangle_1"],
-                rectangle_test_data["rectangle_2"],
+                "data/123/rectangle_1.json",
+                "data/123/rectangle_2.json",
             ],
+            "test_merge_not_matching",
         )
         incorrect_coords: list[list[float]] = [[-103, 39], [-102, 39], [-102, 38], [-103, 38]]
         coords_match, actual_coords = check_coordinates_match(
-            merge_feature_data["feature_collection_json"], incorrect_coords
+            merge_feature_data["feature_collection_path"], incorrect_coords
         )
 
         assert not coords_match, (
@@ -448,10 +472,18 @@ class TestMCPServerOutputs:
             f"coordinates {incorrect_coords}"
         )
 
-    def test_reduce_image_result(self, binary_image_test_data: dict[str, str | int]) -> None:
-        result = reduce_image(
+    def test_reduce_image_result(self, binary_image_test_data: dict[str, str]) -> None:
+        save_ee_object(
+            "data/123/binary_image_horizontal.json",
             binary_image_test_data["binary_image_horizontal"],
+        )
+        save_ee_object(
+            "data/123/horizontal_rectangle.json",
             binary_image_test_data["horizontal_rectangle"],
+        )
+        result = reduce_image(
+            "data/123/binary_image_horizontal.json",
+            "data/123/horizontal_rectangle.json",
             "sum",
             scale=binary_image_test_data["scale"],
         )
@@ -459,8 +491,8 @@ class TestMCPServerOutputs:
         assert abs(result["aggregation_result"] - 2) < 0.5  # noqa: PLR2004
 
         result = reduce_image(
-            binary_image_test_data["binary_image_horizontal"],
-            binary_image_test_data["vertical_rectangle"],
+            "data/123/binary_image_horizontal.json",
+            "data/123/vertical_rectangle.json",
             "sum",
             scale=binary_image_test_data["scale"],
         )
