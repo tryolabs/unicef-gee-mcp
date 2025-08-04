@@ -480,7 +480,7 @@ def get_zone_of_area(
 
     Args:
         area_name (str): Name of the geographic area to retrieve.
-        area_type (AREA_TYPES): Type of area (e.g., 'country', 'state', 'city').
+        area_type (AREA_TYPES): Type of area ('country' or 'admin1').
         trace_id (str): Unique identifier for the processing session.
 
     Returns:
