@@ -94,8 +94,8 @@ class TestHandleMaskImage:
         image_json = mock_image.serialize.return_value
         mask_json = mock_image.serialize.return_value
 
-        path_to_image = "data/test_image.json"
-        path_to_mask = "data/test_mask.json"
+        path_to_image = "data/123/test_image.json"
+        path_to_mask = "data/123/test_mask.json"
         save_ee_object(path_to_image, image_json)
         save_ee_object(path_to_mask, mask_json)
 
@@ -119,7 +119,7 @@ class TestHandleFilterImageByThreshold:
         )
         threshold = 5.0
 
-        path_to_image = "data/test_image.json"
+        path_to_image = "data/123/test_image.json"
         save_ee_object(path_to_image, image_json)
 
         result = handlers.handle_filter_image_by_threshold(path_to_image, threshold)
@@ -134,7 +134,7 @@ class TestHandleFilterImageByThreshold:
         image_json = '{"invalid": "json"}'
         threshold = 5.0
 
-        path_to_image = "data/test_image.json"
+        path_to_image = "data/123/test_image.json"
         save_ee_object(path_to_image, image_json)
 
         with pytest.raises(KeyError):
@@ -159,7 +159,7 @@ class TestHandleUnionBinaryImages:
         ]
         path_to_images: list[str] = []
         for i, image in enumerate(binary_images):
-            path_to_image = f"data/test_image_{i}.json"
+            path_to_image = f"data/123/test_image_{i}.json"
             path_to_images.append(path_to_image)
             save_ee_object(path_to_image, image)
 
@@ -194,7 +194,7 @@ class TestHandleIntersectBinaryImages:
 
         path_to_images: list[str] = []
         for i, image in enumerate(binary_images):
-            path_to_image = f"data/test_image_{i}.json"
+            path_to_image = f"data/123/test_image_{i}.json"
             path_to_images.append(path_to_image)
             save_ee_object(path_to_image, image)
 
@@ -224,7 +224,7 @@ class TestHandleIntersectFeatureCollections:
 
         path_to_feature_collections: list[str] = []
         for i, feature_collection in enumerate(feature_collections):
-            path_to_feature_collection = f"data/test_feature_collection_{i}.json"
+            path_to_feature_collection = f"data/123/test_feature_collection_{i}.json"
             path_to_feature_collections.append(path_to_feature_collection)
             save_ee_object(path_to_feature_collection, feature_collection)
 
@@ -254,7 +254,7 @@ class TestHandleMergeFeatureCollections:
 
         path_to_feature_collections: list[str] = []
         for i, feature_collection in enumerate(feature_collections):
-            path_to_feature_collection = f"data/test_feature_collection_{i}.json"
+            path_to_feature_collection = f"data/123/test_feature_collection_{i}.json"
             path_to_feature_collections.append(path_to_feature_collection)
             save_ee_object(path_to_feature_collection, feature_collection)
 
