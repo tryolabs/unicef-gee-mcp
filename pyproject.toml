@@ -183,8 +183,6 @@ unfixable = [
 ]
 
 ignore = [
-    "ANN101",  # Don't require type annotations for self.
-    "ANN102",  # Don't require type annotations for cls.
     "D418",    # overload-with-docstring; Overloads should have docstrings when they alter the API/functionality.
     "FIX002",  # Allow TODO tags but no others.
     "TRY003",  # Makes no sense for builtin exceptions.
