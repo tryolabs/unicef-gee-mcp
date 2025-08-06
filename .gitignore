@@ -127,7 +127,8 @@ cython_debug/
 **/.DS_Store
 
 # Some reasonable project exclusions
-/data/
+/data/*
+!/data/123/
 /models/
 /logs/
 
