@@ -10,7 +10,7 @@ import pytest
 import yaml
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_ee_module() -> Generator[MagicMock, None, None]:
     """Mock the entire ee module."""
     with pytest.MonkeyPatch().context() as m:
@@ -35,7 +35,7 @@ def mock_ee_module() -> Generator[MagicMock, None, None]:
         yield mock_ee
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_config_data() -> dict[str, Any]:
     """Sample configuration data."""
     return {
@@ -45,7 +45,7 @@ def sample_config_data() -> dict[str, Any]:
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_metadata() -> dict[str, Any]:
     """Sample dataset metadata."""
     return {
@@ -72,7 +72,7 @@ def sample_metadata() -> dict[str, Any]:
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_config_file(sample_config_data: dict[str, Any]) -> Generator[Path, None, None]:
     """Create a temporary config file."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
@@ -83,7 +83,7 @@ def temp_config_file(sample_config_data: dict[str, Any]) -> Generator[Path, None
     temp_path.unlink()
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_metadata_file(sample_metadata: dict[str, Any]) -> Generator[Path, None, None]:
     """Create a temporary metadata file."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
@@ -94,7 +94,7 @@ def temp_metadata_file(sample_metadata: dict[str, Any]) -> Generator[Path, None,
     temp_path.unlink()
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_image() -> MagicMock:
     """Mock Earth Engine Image."""
     mock = MagicMock()
@@ -116,7 +116,7 @@ def mock_image() -> MagicMock:
     return mock
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_image_gt() -> MagicMock:
     """Mock Earth Engine Image.gt."""
     mock = MagicMock()
@@ -131,7 +131,7 @@ def mock_image_gt() -> MagicMock:
     return mock
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_image_collection() -> MagicMock:
     """Mock Earth Engine ImageCollection."""
     mock = MagicMock()
@@ -146,7 +146,7 @@ def mock_image_collection() -> MagicMock:
     return mock
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_image_or() -> MagicMock:
     """Mock Earth Engine Image.Or."""
     mock = MagicMock()
@@ -165,7 +165,7 @@ def mock_image_or() -> MagicMock:
     return mock
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_image_and() -> MagicMock:
     """Mock Earth Engine Image.And."""
     mock = MagicMock()
@@ -184,7 +184,7 @@ def mock_image_and() -> MagicMock:
     return mock
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_feature_collection_intersect() -> MagicMock:
     """Mock Earth Engine FeatureCollection."""
     mock = MagicMock()
@@ -212,7 +212,7 @@ def mock_feature_collection_intersect() -> MagicMock:
     return mock
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_feature_collection_merge() -> MagicMock:
     """Mock Earth Engine FeatureCollection."""
     mock = MagicMock()
@@ -228,7 +228,7 @@ def mock_feature_collection_merge() -> MagicMock:
     return mock
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_boundry_json() -> MagicMock:
     """Mock Earth Engine FeatureCollection.mean."""
     mock = MagicMock()
@@ -254,7 +254,7 @@ def mock_boundry_json() -> MagicMock:
     return mock
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_json_data() -> dict[str, Any]:
     """Sample JSON data for testing."""
     return {
@@ -265,7 +265,7 @@ def sample_json_data() -> dict[str, Any]:
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_pycountry() -> MagicMock:
     """Mock pycountry module."""
     mock = MagicMock()
@@ -281,7 +281,7 @@ def mock_pycountry() -> MagicMock:
     return mock
 
 
-@pytest.fixture()
+@pytest.fixture
 def integration_test_data() -> dict[str, Any]:
     """Data for integration tests."""
     return {

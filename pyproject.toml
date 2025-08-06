@@ -73,6 +73,31 @@ default-groups = [
 line-length = 100
 extend-exclude = [".venv"]
 
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
 [tool.pyright]
 # Very optional: type checking. Values are off, basic and strict. See more at https://code.visualstudio.com/docs/python/settings-reference#_pylance-language-server.
 typeCheckingMode = "strict"
@@ -92,17 +117,6 @@ reportUnknownLambdaType = false  # Lambdas have their place and type-hinting the
 reportMissingTypeArgument = true
 reportMissingParameterType = true
 reportArgumentType = true
-
-[tool.ruff.lint.extend-per-file-ignores]
-"**/tests/**/*.py" = [
-    "S101", # S101 - Checks for uses of the assert keyword. - necessary for testing.
-    "B018", # B018 - Found useless expression - necessary for testing exceptions are raised.
-    "D100", # D100 - Module dostrings not required in test files.
-    "D104", # D104 - Package dostrings not required in test files.
-    "ARG",  # ARG - Unused args are common in tests with mock patches and mock functions.
-]
-
-"**/notebooks/**/*.py" = ["B018", "ANN"]
 
 [tool.ruff.lint]
 select = [
@@ -206,41 +220,28 @@ ignore = [
     "COM819", # prohibited trailing comma; conflicts with formatting.
     "ISC001", # single line implicit string concatenation; conflicts with formatting.
     "ISC002", # multi line implicit string concatenation; conflicts with formatting.
+    "PT001",  # pytest-fixture-incorrect-parentheses-style; conflicts with formatting.
 ]
 
-# Exclude a variety of commonly ignored directories.
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
+[tool.ruff.lint.extend-per-file-ignores]
+"**/tests/**/*.py" = [
+    "S101", # S101 - Checks for uses of the assert keyword. - necessary for testing.
+    "B018", # B018 - Found useless expression - necessary for testing exceptions are raised.
+    "D100", # D100 - Module dostrings not required in test files.
+    "D104", # D104 - Package dostrings not required in test files.
+    "ARG",  # ARG - Unused args are common in tests with mock patches and mock functions.
 ]
+
+"**/notebooks/**/*.py" = ["B018", "ANN"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
-[tool.ruff.flake8-annotations]
+[tool.ruff.lint.flake8-annotations]
 allow-star-arg-any = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["gee_mcp"]
+packages = ["ee_mcp"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
