@@ -7,6 +7,7 @@ import handlers
 import pytest
 from constants import BASE_ASSETS_PATH
 from initialize import initialize_ee
+from utils import save_ee_object
 
 initialize_ee(Path("ee_auth.json"))
 
@@ -93,7 +94,12 @@ class TestHandleMaskImage:
         image_json = mock_image.serialize.return_value
         mask_json = mock_image.serialize.return_value
 
-        result = handlers.handle_mask_image(image_json, mask_json)
+        path_to_image = "data/test_image.json"
+        path_to_mask = "data/test_mask.json"
+        save_ee_object(path_to_image, image_json)
+        save_ee_object(path_to_mask, mask_json)
+
+        result = handlers.handle_mask_image(path_to_image, path_to_mask)
 
         assert isinstance(result, str)
 
@@ -113,7 +119,10 @@ class TestHandleFilterImageByThreshold:
         )
         threshold = 5.0
 
-        result = handlers.handle_filter_image_by_threshold(image_json, threshold)
+        path_to_image = "data/test_image.json"
+        save_ee_object(path_to_image, image_json)
+
+        result = handlers.handle_filter_image_by_threshold(path_to_image, threshold)
 
         assert result == mock_image_gt.gt.return_value
 
@@ -125,8 +134,11 @@ class TestHandleFilterImageByThreshold:
         image_json = '{"invalid": "json"}'
         threshold = 5.0
 
+        path_to_image = "data/test_image.json"
+        save_ee_object(path_to_image, image_json)
+
         with pytest.raises(KeyError):
-            handlers.handle_filter_image_by_threshold(image_json, threshold)
+            handlers.handle_filter_image_by_threshold(path_to_image, threshold)
 
 
 class TestHandleUnionBinaryImages:
@@ -145,8 +157,13 @@ class TestHandleUnionBinaryImages:
             '{"functionName": "Image.load", "arguments": '
             '{"id": {"constantValue": "projects/unicef-ccri/assets/binary2"}}}}}}',
         ]
+        path_to_images: list[str] = []
+        for i, image in enumerate(binary_images):
+            path_to_image = f"data/test_image_{i}.json"
+            path_to_images.append(path_to_image)
+            save_ee_object(path_to_image, image)
 
-        result = handlers.handle_union_binary_images(binary_images)
+        result = handlers.handle_union_binary_images(path_to_images)
 
         assert result == mock_image_or.Or.return_value
 
@@ -175,7 +192,13 @@ class TestHandleIntersectBinaryImages:
             '{"id": {"constantValue": "projects/unicef-ccri/assets/binary2"}}}}}}',
         ]
 
-        result = handlers.handle_intersect_binary_images(binary_images)
+        path_to_images: list[str] = []
+        for i, image in enumerate(binary_images):
+            path_to_image = f"data/test_image_{i}.json"
+            path_to_images.append(path_to_image)
+            save_ee_object(path_to_image, image)
+
+        result = handlers.handle_intersect_binary_images(path_to_images)
 
         assert result == mock_image_and.And.return_value
 
@@ -199,7 +222,13 @@ class TestHandleIntersectFeatureCollections:
             '{"tableId": {"constantValue": "projects/unicef-ccri/assets/adm1_wfp"}}}}}}',
         ]
 
-        result = handlers.handle_intersect_feature_collections(feature_collections)
+        path_to_feature_collections: list[str] = []
+        for i, feature_collection in enumerate(feature_collections):
+            path_to_feature_collection = f"data/test_feature_collection_{i}.json"
+            path_to_feature_collections.append(path_to_feature_collection)
+            save_ee_object(path_to_feature_collection, feature_collection)
+
+        result = handlers.handle_intersect_feature_collections(path_to_feature_collections)
 
         assert result == mock_feature_collection_intersect.serialize.return_value
 
@@ -223,7 +252,13 @@ class TestHandleMergeFeatureCollections:
             '{"tableId": {"constantValue": "projects/unicef-ccri/assets/adm0_wfp"}}}}}}',
         ]
 
-        result = handlers.handle_merge_feature_collections(feature_collections)
+        path_to_feature_collections: list[str] = []
+        for i, feature_collection in enumerate(feature_collections):
+            path_to_feature_collection = f"data/test_feature_collection_{i}.json"
+            path_to_feature_collections.append(path_to_feature_collection)
+            save_ee_object(path_to_feature_collection, feature_collection)
+
+        result = handlers.handle_merge_feature_collections(path_to_feature_collections)
 
         assert result == mock_feature_collection_merge.serialize.return_value
 

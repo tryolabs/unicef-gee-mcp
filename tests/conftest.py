@@ -170,12 +170,16 @@ def mock_image_and() -> MagicMock:
     """Mock Earth Engine Image.And."""
     mock = MagicMock()
     mock.And.return_value = (
-        '{"result": "0", "values": {"0": {"functionInvocationValue": '
-        '{"functionName": "Image.and", "arguments": {"image1": '
-        '{"functionInvocationValue": {"functionName": "Image.load", "arguments": '
-        '{"id": {"constantValue": "projects/unicef-ccri/assets/binary1"}}}}, '
-        '"image2": {"functionInvocationValue": {"functionName": "Image.load", '
-        '"arguments": {"id": {"constantValue": "projects/unicef-ccri/assets/binary2"}}}}}}}}}'
+        '{"result": "0", "values": {"1": {"functionInvocationValue": '
+        '{"functionName": "Image.constant", "arguments": {"value": {"constantValue": 0}}}}, '
+        '"0": {"functionInvocationValue": {"functionName": "Image.and", "arguments": {"image1": '
+        '{"functionInvocationValue": {"functionName": "Image.unmask", "arguments": {"input": '
+        '{"functionInvocationValue": {"functionName": "Image.load", "arguments": {"id": '
+        '{"constantValue": "projects/unicef-ccri/assets/binary1"}}}}, "value": {"valueReference": '
+        '"1"}}}}, "image2": {"functionInvocationValue": {"functionName": "Image.unmask", '
+        '"arguments": {"input": {"functionInvocationValue": {"functionName": "Image.load", '
+        '"arguments": {"id": {"constantValue": "projects/unicef-ccri/assets/binary2"}}}}, '
+        '"value": {"valueReference": "1"}}}}}}}}}'
     )
     return mock
 
