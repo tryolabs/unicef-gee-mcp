@@ -14,8 +14,20 @@ def initialize_ee(path_to_ee_auth: Path) -> None:
     Args:
         path_to_ee_auth: Path to the JSON file containing service account credentials
     """
-    logger.info("Initializing Google Earth Engine with service account credentials")
-    key_file = path_to_ee_auth.read_text()
+    try:
+        logger.info("Initializing Google Earth Engine with service account credentials")
+        key_file = path_to_ee_auth.read_text()
+    except FileNotFoundError:
+        msg = "Service account credentials file not found at %s", path_to_ee_auth
+        logger.info(msg)
+        try:
+            logger.info("Attempting to load service account credentials from ee_auth.json")
+            key_file = Path("ee_auth.json").read_text()
+        except FileNotFoundError:
+            msg = "Service account credentials file not found at ee_auth.json"
+            logger.info(msg)
+            raise FileNotFoundError(msg) from None
+
     key_dict = json.loads(key_file)
     email = key_dict["client_email"]
 
