@@ -3,7 +3,7 @@ name = "ee-mcp"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Federico Bello", email = "fe.debello13@gmail.com" }]
-requires-python = "~=3.11"
+requires-python = "~=3.11.0"
 dependencies = [
     "geemap @ git+https://github.com/gee-community/geemap.git",
     "earthengine-api>=1.5.21",
@@ -183,7 +183,6 @@ unfixable = [
 ]
 
 ignore = [
-    "ANN101",  # Don't require type annotations for self.
     "D418",    # overload-with-docstring; Overloads should have docstrings when they alter the API/functionality.
     "FIX002",  # Allow TODO tags but no others.
     "TRY003",  # Makes no sense for builtin exceptions.
