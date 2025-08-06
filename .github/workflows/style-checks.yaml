@@ -1,6 +1,10 @@
 name: Style check
 
-on: push
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   style-check:
@@ -9,32 +13,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      # Allow loading a cached venv created in a previous run if the lock file is identical
-      - name: Load cached venv if it exists
-        id: venv-cache
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock', '**/pyproject.toml') }}
+      - name: Set up Python
+        run: uv python install "3.11"
 
       - name: Install dependencies
-        if: steps.venv-cache.outputs.cache-hit != 'true'
-        run: poetry sync --no-interaction --only dev
+        run: uv sync --frozen
 
       - name: Check linting with Ruff
-        run: poetry run ruff check
+        run: uv run ruff check
 
       - name: Check format with Ruff
-        run: poetry run ruff format --check
+        run: uv run ruff format --check
 
       - name: Check docstring coverage
-        run: poetry run docstr-coverage ./**/*.py --fail-under 20  --verbose=2 --skip-file-doc --skip-init
+        run: uv run docstr-coverage ./**/*.py --fail-under 20 --verbose=2 --skip-file-doc --skip-init
