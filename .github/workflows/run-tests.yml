@@ -27,7 +27,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Create EE Auth JSON from Secret
-        run: echo "${{ secrets.EE_AUTH_JSON }}" > ee_auth.json
+        run: printf '%s' "${{ secrets.EE_AUTH_JSON }}" > ee_auth.json
 
       - name: Run tests with pytest
         run: uv run pytest
