@@ -401,9 +401,9 @@ class TestMCPServerOutputs:
             intersection_feature_data["feature_collection_path"], expected_coords
         )
 
-        assert (
-            coords_match
-        ), f"Intersection coordinates {actual_coords} do not match expected {expected_coords}"
+        assert coords_match, (
+            f"Intersection coordinates {actual_coords} do not match expected {expected_coords}"
+        )
 
     def test_intersect_feature_collection_result_not_matching(
         self, rectangle_test_data: dict[str, str]
@@ -445,9 +445,9 @@ class TestMCPServerOutputs:
             merge_feature_data["feature_collection_path"], expected_coords
         )
 
-        assert (
-            coords_match
-        ), f"Intersection coordinates {actual_coords} do not match expected {expected_coords}"
+        assert coords_match, (
+            f"Intersection coordinates {actual_coords} do not match expected {expected_coords}"
+        )
 
     def test_merge_feature_collection_result_not_matching(
         self, rectangle_test_data: dict[str, str]
