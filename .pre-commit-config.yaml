@@ -1,4 +1,4 @@
-# If you make changes to this file, you should run `poetry run pre-commit install` to update the hooks
+# If you make changes to this file, you should run `uv run pre-commit install` to update the hooks
 # Remember to update the version of the ruff-pre-commit repo when you update Ruff
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
