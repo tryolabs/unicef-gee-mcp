@@ -6,7 +6,10 @@ name: Build and Push to ECR
 on:
   push:
     branches:
-      - main # Trigger the workflow on pushes to the main branch
+      - main
+  pull_request:
+    branches:
+      - main
 
 # Environment variables available to all jobs and steps
 env:
@@ -44,7 +47,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
+          push: ${{ github.event_name == 'push' }}
           platforms: linux/amd64
           tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}, ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
           cache-from: type=inline
