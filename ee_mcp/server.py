@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 from typing import Any, get_args
 
@@ -658,7 +659,7 @@ def delete_temp_dir(trace_id: str) -> dict[str, Any]:
             "input_arguments": {"temp_dir": str(temp_dir)},
         }
     try:
-        temp_dir.rmdir()
+        shutil.rmtree(temp_dir)
         logger.info("Deleted temporary directory %s", temp_dir)
         return {"result": "success", "input_arguments": {"temp_dir": str(temp_dir)}}
     except Exception as e:
