@@ -120,7 +120,7 @@ def get_dataset_image(
     Example:
         >>> get_dataset_image("FLOOD_DATA", "session_123")
         {
-            "image_path": "data/session_123/image-flood_data.json",
+            "image_path": "data/session_123/image_flood_data.json",
             "input_arguments": {"dataset": "flood_data"}
         }
     """
@@ -132,7 +132,7 @@ def get_dataset_image(
         logger.exception(msg)
         raise ValueError(msg)
     res = handle_get_dataset_image(dataset, config.path_to_metadata)
-    image_path = f"data/{trace_id}/image-{dataset}.json"
+    image_path = f"data/{trace_id}/image_{dataset}.json"
     save_ee_object(image_path, res)
     logger.info("Successfully retrieved dataset image for %s", dataset)
     return {"image_path": image_path, "input_arguments": {"dataset": dataset}}
@@ -187,8 +187,8 @@ def mask_image(
     return {
         "image_path": result_path,
         "input_arguments": {
-            "image_path": image_path,
-            "mask_image_path": mask_image_path,
+            "image": image_path.split("/")[-1],
+            "mask_image": mask_image_path.split("/")[-1],
             "result_name": result_name,
         },
     }
@@ -241,7 +241,14 @@ def filter_image_by_threshold(
         msg = f"Error filtering image by threshold {threshold}: {e}"
         logger.exception(msg)
         raise ValueError(msg) from e
-    return {"image_path": result_path, "input_arguments": {"threshold": threshold}}
+    return {
+        "result_name": result_name,
+        "input_arguments": {
+            "image": image_path.split("/")[-1],
+            "threshold": threshold,
+            "result_name": result_name,
+        },
+    }
 
 
 @mcp.tool(name="union_binary_images")
@@ -280,7 +287,15 @@ def union_binary_images(
     logger.info("Successfully performed union on %d binary images", len(binary_images_paths))
     result_path = f"{'/'.join(binary_images_paths[0].split('/')[:-1])}/{result_name}.json"
     save_ee_object(result_path, res)
-    return {"image_path": result_path}
+    return {
+        "result_name": result_name,
+        "input_arguments": {
+            "result_name": result_name,
+            "binary_images": [
+                binary_images_paths.split("/")[-1] for binary_images_paths in binary_images_paths
+            ],
+        },
+    }
 
 
 @mcp.tool(name="intersect_binary_images")
@@ -319,7 +334,15 @@ def intersect_binary_images(
     logger.info("Successfully performed intersection on %d binary images", len(binary_images_paths))
     result_path = f"{'/'.join(binary_images_paths[0].split('/')[:-1])}/{result_name}.json"
     save_ee_object(result_path, res)
-    return {"image_path": result_path}
+    return {
+        "image_path": result_path,
+        "input_arguments": {
+            "result_name": result_name,
+            "binary_images": [
+                binary_images_paths.split("/")[-1] for binary_images_paths in binary_images_paths
+            ],
+        },
+    }
 
 
 @mcp.tool(name="intersect_feature_collections")
@@ -367,7 +390,16 @@ def intersect_feature_collections(
     )
     result_path = f"{'/'.join(feature_collections_paths[0].split('/')[:-1])}/{result_name}.json"
     save_ee_object(result_path, res)
-    return {"feature_collection_path": result_path}
+    return {
+        "feature_collection_path": result_path,
+        "input_arguments": {
+            "result_name": result_name,
+            "feature_collections": [
+                feature_collections_paths.split("/")[-1]
+                for feature_collections_paths in feature_collections_paths
+            ],
+        },
+    }
 
 
 @mcp.tool(name="merge_feature_collections")
@@ -410,7 +442,16 @@ def merge_feature_collections(
     logger.info("Successfully merged %d feature collections", len(feature_collections_paths))
     result_path = f"{'/'.join(feature_collections_paths[0].split('/')[:-1])}/{result_name}.json"
     save_ee_object(result_path, res)
-    return {"feature_collection_path": result_path}
+    return {
+        "feature_collection_path": result_path,
+        "input_arguments": {
+            "result_name": result_name,
+            "feature_collections": [
+                feature_collections_paths.split("/")[-1]
+                for feature_collections_paths in feature_collections_paths
+            ],
+        },
+    }
 
 
 @mcp.tool(name="reduce_image")
@@ -463,7 +504,15 @@ def reduce_image(
     res = handle_reduce_image(image_path, feature_collection_path, reducer, scale)
     logger.info("Successfully reduced image with reducer %s, result: %s", reducer, res)
 
-    return {"aggregation_result": res, "input_arguments": {"reducer": reducer}}
+    return {
+        "aggregation_result": res,
+        "input_arguments": {
+            "reducer": reducer,
+            "feature_collection": feature_collection_path.split("/")[-1],
+            "image": image_path.split("/")[-1],
+            "scale": scale,
+        },
+    }
 
 
 @mcp.tool(name="get_zone_of_area")
@@ -494,7 +543,7 @@ def get_zone_of_area(
     Example:
         >>> get_zone_of_area("Kenya", "country", "session_123")
         {
-            "zone_path": "data/session_123/zone-Kenya.json",
+            "zone_path": "data/session_123/zone_Kenya.json",
             "input_arguments": {"area_name": "Kenya", "area_type": "country"}
         }
     """
@@ -506,7 +555,7 @@ def get_zone_of_area(
         raise ValueError(msg)
     res = handle_get_zone_of_area(area_name, area_type)
     logger.info("Successfully retrieved zone for area %s of type %s", area_name, area_type)
-    result_path = f"data/{trace_id}/zone-{area_name}.json"
+    result_path = f"data/{trace_id}/zone_{area_name}.json"
     save_ee_object(result_path, res)
     logger.info("Saved zone to %s", result_path)
     return {
@@ -571,7 +620,12 @@ def build_map(
     logger.info("Successfully built map")
     return {
         "html_content": res,
-        "input_arguments": {"color_palettes": color_palettes, "names": names},
+        "input_arguments": {
+            "color_palettes": color_palettes,
+            "names": names,
+            "feature_collection": feature_collection_path.split("/")[-1],
+            "images": [images_paths.split("/")[-1] for images_paths in images_paths],
+        },
     }
 
 
