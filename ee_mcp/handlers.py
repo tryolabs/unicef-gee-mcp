@@ -474,19 +474,19 @@ def handle_build_map(
         # Apply mask to show only non-zero values
         masked_image: Image = clipped_image.updateMask(clipped_image.gt(0))
 
-        max_value = list(
+        min_value, max_value = list(
             masked_image.reduceRegion(
-                reducer=Reducer.max(),
+                reducer=Reducer.minMax(),
                 geometry=vector_data.geometry(),
                 scale=1000,
                 maxPixels=int(1e9),
             )
             .getInfo()
             .values()  # type: ignore[misc]
-        )[0]
+        )
 
         vis_params = {
-            "min": 0,
+            "min": min_value,
             "max": max_value,
             "palette": (color_palettes[i] if color_palettes[i] != [] else default_color_palette),
         }
