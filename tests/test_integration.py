@@ -211,9 +211,9 @@ class TestMCPServerIntegration:
 
         result = filter_image_by_threshold(image_path, 0.5, "test_filtered_image")
 
-        assert "image_path" in result
-        assert isinstance(result["image_path"], str)
-        assert len(result["image_path"]) > 0
+        assert "result_name" in result
+        assert isinstance(result["result_name"], str)
+        assert len(result["result_name"]) > 0
 
     def test_mask_image_endpoint(self) -> None:
         """Test the mask_image endpoint."""
@@ -224,9 +224,9 @@ class TestMCPServerIntegration:
             image_result["image_path"], mask_result["image_path"], "test_masked_image"
         )
 
-        assert "image_path" in result
-        assert isinstance(result["image_path"], str)
-        assert len(result["image_path"]) > 0
+        assert "result_name" in result
+        assert isinstance(result["result_name"], str)
+        assert len(result["result_name"]) > 0
 
     def test_union_binary_images_endpoint(self) -> None:
         """Test the union_binary_images endpoint."""
@@ -239,12 +239,16 @@ class TestMCPServerIntegration:
         )
 
         result = union_binary_images(
-            [binary1_result["image_path"], binary2_result["image_path"]], "test_union_result"
+            [
+                f"data/123/{binary1_result['result_name']}.json",
+                f"data/123/{binary2_result['result_name']}.json",
+            ],
+            "test_union_result",
         )
 
-        assert "image_path" in result
-        assert isinstance(result["image_path"], str)
-        assert len(result["image_path"]) > 0
+        assert "result_name" in result
+        assert isinstance(result["result_name"], str)
+        assert len(result["result_name"]) > 0
 
     def test_intersect_binary_images_endpoint(self) -> None:
         """Test the intersect_binary_images endpoint."""
@@ -259,12 +263,16 @@ class TestMCPServerIntegration:
         )
 
         result = intersect_binary_images(
-            [binary1_result["image_path"], binary2_result["image_path"]], "test_intersect_result"
+            [
+                f"data/123/{binary1_result['result_name']}.json",
+                f"data/123/{binary2_result['result_name']}.json",
+            ],
+            "test_intersect_result",
         )
 
-        assert "image_path" in result
-        assert isinstance(result["image_path"], str)
-        assert len(result["image_path"]) > 0
+        assert "result_name" in result
+        assert isinstance(result["result_name"], str)
+        assert len(result["result_name"]) > 0
 
     def test_reduce_image_endpoint(self) -> None:
         """Test the reduce_image endpoint."""
@@ -310,14 +318,14 @@ class TestMCPServerEdgeCases:
         result_large = filter_image_by_threshold(
             image_result["image_path"], 1e10, "test_large_threshold"
         )
-        assert "image_path" in result_large
-        assert isinstance(result_large["image_path"], str)
+        assert "result_name" in result_large
+        assert isinstance(result_large["result_name"], str)
 
         result_small = filter_image_by_threshold(
             image_result["image_path"], -1e10, "test_small_threshold"
         )
-        assert "image_path" in result_small
-        assert isinstance(result_small["image_path"], str)
+        assert "result_name" in result_small
+        assert isinstance(result_small["result_name"], str)
 
     def test_multiple_binary_images_union(self) -> None:
         """Test union with multiple binary images."""
@@ -327,13 +335,13 @@ class TestMCPServerEdgeCases:
             binary_result = filter_image_by_threshold(
                 image_result["image_path"], 0.5, f"binary_{dataset}"
             )
-            images.append(binary_result["image_path"])
+            images.append(f"data/123/{binary_result['result_name']}.json")
 
         result = union_binary_images(images, "test_multiple_union")
 
-        assert "image_path" in result
-        assert isinstance(result["image_path"], str)
-        assert len(result["image_path"]) > 0
+        assert "result_name" in result
+        assert isinstance(result["result_name"], str)
+        assert len(result["result_name"]) > 0
 
     def test_different_reducer_types(self) -> None:
         """Test reduce_image with different reducer types."""
@@ -364,8 +372,8 @@ class TestMCPServerPerformance:
 
         assert len(results) == 3  # noqa: PLR2004
         for result in results:
-            assert "image_path" in result
-            assert isinstance(result["image_path"], str)
+            assert "result_name" in result
+            assert isinstance(result["result_name"], str)
 
     def test_large_feature_collection_operations(self) -> None:
         """Test operations with larger feature collections."""

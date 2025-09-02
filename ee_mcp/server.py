@@ -158,7 +158,7 @@ def mask_image(
 
     Returns:
         dict[str, Any]: Dictionary containing:
-            - image_path (str): Path to the saved masked image JSON file.
+            - result_name (str): Name of the output masked image file.
             - input_arguments (dict): Contains all input parameters used.
 
     Example:
@@ -167,7 +167,7 @@ def mask_image(
         ...     "children_population_flood_zones",
         ... )
         {
-            "image_path": "data/session_123/children_population_flood_zones.json",
+            "result_name": "children_population_flood_zones",
             "input_arguments": {
                 "image_path": "data/session_123/children_population.json",
                 "mask_image_path": "data/session_123/flood_zones.json",
@@ -186,7 +186,7 @@ def mask_image(
     save_ee_object(result_path, res)
     logger.info("Successfully masked image")
     return {
-        "image_path": result_path,
+        "result_name": result_name,
         "input_arguments": {
             "image": image_path.split("/")[-1],
             "mask_image": mask_image_path.split("/")[-1],
@@ -269,7 +269,7 @@ def union_binary_images(
 
     Returns:
         dict[str, Any]: Dictionary containing the union result image path.
-            - image_path (str): Path to the resulting union image.
+            - result_name (str): Name of the output union image file.
 
     Example:
         >>> union_binary_images([
@@ -279,7 +279,7 @@ def union_binary_images(
         ...     "union_result",
         ... )
         {
-            "image_path": "data/session_123/union_result.json",
+            "result_name": "union_result",
             "input_arguments": {"result_name": "union_result"}
         }
     """
@@ -316,7 +316,7 @@ def intersect_binary_images(
 
     Returns:
         dict[str, Any]: Dictionary containing the intersection result image path.
-            - image_path (str): Path to the saved intersection image JSON file.
+            - result_name (str): Name of the output intersection image file.
 
     Example:
         >>> intersect_binary_images([
@@ -326,7 +326,7 @@ def intersect_binary_images(
         ...     "flood_and_fire_areas",
         ... )
         {
-            "image_path": "data/session_123/flood_and_fire_areas.json",
+            "result_name": "flood_and_fire_areas",
             "input_arguments": {"result_name": "flood_and_fire_areas"}
         }
     """
@@ -336,7 +336,7 @@ def intersect_binary_images(
     result_path = f"{'/'.join(binary_images_paths[0].split('/')[:-1])}/{result_name}.json"
     save_ee_object(result_path, res)
     return {
-        "image_path": result_path,
+        "result_name": result_name,
         "input_arguments": {
             "result_name": result_name,
             "binary_images": [
