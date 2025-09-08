@@ -1,10 +1,14 @@
 import json
 from ast import literal_eval
 from pathlib import Path
+from typing import cast
 
 from ee.deserializer import fromJSON
 from ee.featurecollection import FeatureCollection
+from ee.geometry import Geometry
 from ee.image import Image
+from ee.imagecollection import ImageCollection
+from ee.reducer import Reducer
 from logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -55,3 +59,58 @@ def load_ee_object(feature_collection_filename: str) -> FeatureCollection | Imag
         msg = f"Unknown vector data type: {type(vector_data)}"
         logger.error(msg)
         raise ValueError(msg)
+
+
+def get_threshold(asset_id: str, *, mosaic: bool) -> float:
+    logger.info("Calculating mean threshold")
+    # Create a land-sea mask by converting the reprojected country boundaries to a raster.
+    # Land pixels will have a value of 1 and sea pixels will be 0.
+    aois = FeatureCollection("projects/unicef-ccri/assets/adm0_simple")
+
+    reference_image = Image("projects/unicef-ccri/assets/heatwave_frequency_2014_2023_avg")
+    target_scale = reference_image.projection().nominalScale()
+    target_crs = reference_image.projection()
+
+    country_boundaries_reprojected = aois.map(  # type: ignore[misc]
+        lambda feature: feature.transform(target_crs)  # type: ignore[misc]
+    )
+
+    land_sea_mask = (
+        Image(1)
+        .clip(country_boundaries_reprojected)
+        .unmask(0)
+        .reproject(crs=target_crs, scale=target_scale)
+        .rename("landsea_mask")  # type: ignore[misc]
+    )
+
+    # Mask the hazard layer to include only land pixels using the land_sea_mask.
+    hazard_layer = ImageCollection(asset_id).mosaic() if mosaic else Image(asset_id)
+    hazard_layer_masked = hazard_layer.updateMask(land_sea_mask)
+
+    global_geometry = Geometry.Polygon(  # type: ignore[arg-type]
+        [
+            [
+                [-180, 90],
+                [-180, -90],
+                [180, -90],
+                [180, 90],
+            ],
+        ],
+        None,
+        False,
+    )
+
+    # Compute the mean hazard value over the global land area.
+    threshold = (
+        hazard_layer_masked.reduceRegion(
+            reducer=Reducer.mean(),
+            geometry=global_geometry,  # type: ignore[arg-type]
+            scale=hazard_layer.projection().nominalScale(),
+            bestEffort=True,
+        )
+        .values()
+        .get(0)
+    )
+    threshold = cast("float", threshold.getInfo())
+    logger.info("Threshold: %s", threshold)
+    return threshold

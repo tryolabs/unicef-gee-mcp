@@ -27,7 +27,7 @@ class DatasetMetadata:
     source_name: str
     source_url: str
     mosaic: bool = False
-    threshold: float | None = None
+    threshold: float | str | None = None
     input_arguments: dict[str, Any] | None = None
     color_palette: list[str] | None = None
 
