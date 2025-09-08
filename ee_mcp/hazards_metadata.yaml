@@ -73,7 +73,7 @@ datasets:
     image_filename: "heatwave_frequency_image.json"
     description: "Frequency of heatwaves, 100-year return level."
     mosaic: false
-    threshold: 16.8
+    threshold: 15.8
     source_name: "ECMWF"
     source_url: "https://www.ecmwf.int/"
     color_palette: ["#f8f800", "#f8c800", "#f89800", "#f86800", "#f83000"]
@@ -83,7 +83,7 @@ datasets:
     image_filename: "heatwave_duration_image.json"
     description: "Duration of heatwaves, 100-year return level."
     mosaic: false
-    threshold: 89.8
+    threshold: 92.4
     source_name: "ECMWF"
     source_url: "https://www.ecmwf.int/"
     color_palette: ["#f8f800", "#f8c800", "#f89800", "#f86800", "#f83000"]
@@ -93,7 +93,7 @@ datasets:
     image_filename: "heatwave_severity_image.json"
     description: "Severity of heatwaves, 100-year return level."
     mosaic: false
-    threshold: 3.8
+    threshold: 3.6
     source_name: "ECMWF"
     source_url: "https://www.ecmwf.int/"
     color_palette: ["#f8f800", "#f8c800", "#f89800", "#f86800", "#f83000"]

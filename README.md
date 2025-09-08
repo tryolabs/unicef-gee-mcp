@@ -260,6 +260,27 @@ uv run pytest
 uv run pytest tests/test_integration.py -v
 ```
 
+### Scripts
+
+These helper scripts generate data used by tests and quick analyses. They require Google Earth Engine access and a service account key (`ee_auth.json` in the project root or the path configured in `ee_mcp/config.yaml`).
+
+- **`scripts/baseline.py`**
+
+  - Calculates baseline children exposure at ADM0 (country) for a set of hazards.
+  - Saves per-hazard CSV outputs to `./output/`.
+  - Run:
+    ```bash
+    uv run python scripts/baseline.py
+    ```
+
+- **`scripts/multi_hazards.py`**
+  - Computes multi-hazard exposure (both/either and per-hazard) using handlers and metadata in `ee_mcp/hazards_metadata.yaml`.
+  - Writes intermediate EE objects to `data/123/` and logs summary stats.
+  - Run:
+    ```bash
+    uv run python scripts/multi_hazards.py
+    ```
+
 ### Development Setup
 
 1. **Clone repository**
