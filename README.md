@@ -101,23 +101,26 @@ server:
 
 ### Dataset Configuration
 
-The server uses `hazards_metadata.yaml` for dataset definitions. Each dataset entry must include the following fields:
+The server uses `hazards_metadata.yaml` for dataset definitions. See the full guide: [Adding a new dataset](docs/adding-dataset.md).
+
+Each dataset entry must include the following fields:
 
 **Required Fields:**
 
-- **`asset_id`** (string): Google Earth Engine asset identifier for the dataset
-- **`image_filename`** (string): JSON filename for cached image data
-- **`description`** (string): Human-readable description of the dataset and its purpose
-- **`mosaic`** (boolean): Whether the dataset should be processed as a mosaic or single image
-- **`source_name`** (string): Name of the data source organization
-- **`source_url`** (string): URL to the original data source or documentation
-- **`color_palette`** (array): List of hex color codes for visualization (from low to high values)
+- **`image_filename`** (string): Conventional JSON filename used by workflows that cache images.
+- **`asset_id`** (string, suffix only): Earth Engine asset id suffix (prefixed at load time with `projects/unicef-ccri/assets`).
+- **`description`** (string): Human-readable description of the dataset.
+- **`source_name`** (string): Data source organization name.
+- **`source_url`** (string): URL to the original data source or documentation.
 
 **Optional Fields:**
 
-- **`threshold`** (number): Default threshold value for filtering or classification
+- **`mosaic`** (boolean, default: `false`): Whether to mosaic an ImageCollection.
+- **`threshold`** (number | "mean"): Default threshold; `"mean"` computes the global land mean at load time.
+- **`color_palette`** (array): Hex color codes for visualization, from low to high values.
+- **`input_arguments`** (object): Free-form settings for higher-level workflows.
 
-**Example Configuration:**
+For an example entry and validation tips, see [docs/adding-dataset.md](docs/adding-dataset.md).
 
 ## Available Tools
 
