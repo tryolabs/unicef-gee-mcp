@@ -21,8 +21,6 @@ Important: the loader automatically prefixes every `asset_id` with the base path
 
 Required fields:
 
-- `image_filename` (string)
-  - A filename (JSON) associated with the dataset in workflows that cache images to disk. Required by the schema, but the core MCP server generates its own file names at runtime; treat this as a conventional name for pipelines/scripts.
 - `asset_id` (string; suffix only)
   - The Earth Engine asset identifier suffix. The loader will build the full path as `projects/unicef-ccri/assets/{asset_id}`.
   - Examples: `river_flood_r100`, `childpop_constrained`.
@@ -32,8 +30,6 @@ Required fields:
   - Source organization name (e.g., "ECMWF", "WorldPop").
 - `source_url` (string)
   - Link to the source dataset or documentation.
-- `mosaic` (boolean)
-  - Set `true` if the dataset is an ImageCollection that should be mosaicked; `false` for a single Image.
 
 Optional fields:
 
@@ -54,11 +50,9 @@ Optional fields:
 datasets:
   air_pollution:
     asset_id: "pm25_p90_1998_2023" # suffix only; loader prefixes with BASE_ASSETS_PATH
-    image_filename: "air_pollution_image.json"
     description: "PM2.5 90th percentile concentration (1998–2023)."
     source_name: "ACAG"
     source_url: "https://sites.wustl.edu/acag/datasets/surface-pm2-5/"
-    mosaic: false
     threshold: 5 # keep pixels > 5 µg/m³
     color_palette: ["#cec0b8", "#b2a59b", "#9a9381", "#7a745d", "#6f634b"]
 ```
