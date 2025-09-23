@@ -12,11 +12,10 @@ from ee.feature import Feature
 from ee.featurecollection import FeatureCollection
 from ee.filter import Filter
 from ee.image import Image
-from ee.imagecollection import ImageCollection
 from ee.reducer import Reducer
 from logging_config import get_logger
 from schemas import AREA_TYPES, REDUCERS, DatasetMetadata
-from utils import load_ee_object
+from utils import get_threshold, load_ee_object, load_image_or_image_collection
 
 logger = get_logger(__name__)
 
@@ -65,15 +64,10 @@ def handle_get_dataset_image(
         logger.exception(msg)
         raise KeyError(msg) from err
 
-    if metadata.mosaic:
-        logger.debug("Creating mosaic image for dataset %s", dataset)
-        image = ImageCollection(metadata.asset_id).mosaic()
-    else:
-        logger.debug("Creating single image for dataset %s", dataset)
-        image = Image(metadata.asset_id)
-        if dataset == "agricultural_drought":
-            logger.debug("Applying mask for agricultural drought dataset")
-            image = image.updateMask(image.lte(100))
+    image = load_image_or_image_collection(metadata.asset_id)
+    if dataset == "agricultural_drought":
+        logger.debug("Applying mask for agricultural drought dataset")
+        image = image.updateMask(image.lte(100))
 
     return image.serialize()
 
@@ -101,10 +95,10 @@ def handle_mask_image(image_path: str, mask_image_path: str) -> str:
         raise TypeError(msg)
 
     masked_image = image.updateMask(mask_image)
-    return masked_image.serialize()  # type: ignore[return-value]
+    return masked_image.serialize()
 
 
-def handle_filter_image_by_threshold(image_path: str, threshold: float) -> str:
+def handle_filter_image_by_threshold(image_path: str, threshold: float | str) -> str:
     """Filter an Earth Engine image based on a threshold value.
 
     Args:
@@ -124,6 +118,14 @@ def handle_filter_image_by_threshold(image_path: str, threshold: float) -> str:
         raise TypeError(msg)
 
     # Create a mask where values are less than threshold
+    if threshold == "mean":
+        threshold = get_threshold(image_path)
+
+    if not isinstance(threshold, float):
+        msg = "Threshold must be a float"
+        logger.exception(msg)
+        raise TypeError(msg)
+
     threshold_ee: Number = Number(threshold)
     filtered_mask: Image = image.lt(threshold_ee) if threshold < 0 else image.gt(threshold_ee)
     logger.info("Filtered mask successfully created")

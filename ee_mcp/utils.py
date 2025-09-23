@@ -3,6 +3,7 @@ from ast import literal_eval
 from pathlib import Path
 from typing import cast
 
+from ee.data import getAsset
 from ee.deserializer import fromJSON
 from ee.featurecollection import FeatureCollection
 from ee.geometry import Geometry
@@ -61,7 +62,39 @@ def load_ee_object(feature_collection_filename: str) -> FeatureCollection | Imag
         raise ValueError(msg)
 
 
-def get_threshold(asset_id: str, *, mosaic: bool) -> float:
+def load_image_or_image_collection(asset_id: str) -> Image:
+    """Load an EE asset as an Image or mosaicked Image from an ImageCollection.
+
+    If the asset type is IMAGE_COLLECTION, returns ImageCollection(asset_id).mosaic().
+    If the asset type is IMAGE, returns Image(asset_id).
+    """
+    logger.info("Loading asset %s", asset_id)
+    try:
+        asset_info = getAsset(asset_id)
+    except Exception as err:
+        msg = f"Failed to retrieve asset metadata for {asset_id}"
+        logger.exception(msg)
+        raise ValueError(msg) from err
+
+    if not asset_info or "type" not in asset_info:
+        msg = f"Asset not found or missing type for {asset_id}"
+        logger.error(msg)
+        raise ValueError(msg)
+
+    asset_type = str(asset_info.get("type", "")).upper()
+    if "IMAGE_COLLECTION" in asset_type:
+        logger.info("Asset is an ImageCollection; returning mosaicked Image")
+        return ImageCollection(asset_id).mosaic()
+    if "IMAGE" in asset_type:
+        logger.info("Asset is an Image; returning Image")
+        return Image(asset_id)
+
+    msg = f"Unsupported asset type '{asset_type}' for {asset_id}"
+    logger.error(msg)
+    raise ValueError(msg)
+
+
+def get_threshold(image_path: str) -> float:
     logger.info("Calculating mean threshold")
     # Create a land-sea mask by converting the reprojected country boundaries to a raster.
     # Land pixels will have a value of 1 and sea pixels will be 0.
@@ -84,7 +117,12 @@ def get_threshold(asset_id: str, *, mosaic: bool) -> float:
     )
 
     # Mask the hazard layer to include only land pixels using the land_sea_mask.
-    hazard_layer = ImageCollection(asset_id).mosaic() if mosaic else Image(asset_id)
+    hazard_layer = load_ee_object(image_path)
+    if not isinstance(hazard_layer, Image):
+        msg = "Image must be an Earth Engine image"
+        logger.exception(msg)
+        raise TypeError(msg)
+
     hazard_layer_masked = hazard_layer.updateMask(land_sea_mask)
 
     global_geometry = Geometry.Polygon(  # type: ignore[arg-type]

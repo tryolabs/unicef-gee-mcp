@@ -23,7 +23,6 @@ class TestHandleGetAllDatasetsAndMetadata:
         assert "test_dataset" in result
         assert "mosaic_dataset" in result
         assert result["test_dataset"].asset_id == f"{BASE_ASSETS_PATH}/test_asset"
-        assert result["mosaic_dataset"].mosaic is True
 
     def test_handle_get_all_datasets_and_metadata_nonexistent_file(self) -> None:
         """Test handling of nonexistent metadata file."""
@@ -51,27 +50,6 @@ class TestHandleGetAllDatasetsAndMetadata:
 
 class TestHandleGetDatasetImage:
     """Test cases for handle_get_dataset_image function."""
-
-    @patch("handlers.ee")
-    def test_handle_get_dataset_image_success_non_mosaic(
-        self, mock_ee: MagicMock, temp_metadata_file: Path, mock_image: MagicMock
-    ) -> None:
-        """Test successful retrieval of non-mosaic dataset image."""
-        mock_ee.Image.return_value = mock_image
-
-        result = handlers.handle_get_dataset_image("test_dataset", temp_metadata_file)
-        assert result == mock_image.serialize.return_value
-
-    @patch("handlers.ee")
-    def test_handle_get_dataset_image_success_mosaic(
-        self, mock_ee: MagicMock, temp_metadata_file: Path, mock_image_collection: MagicMock
-    ) -> None:
-        """Test successful retrieval of mosaic dataset image."""
-        mock_ee.ImageCollection.return_value = mock_image_collection
-
-        result = handlers.handle_get_dataset_image("mosaic_dataset", temp_metadata_file)
-
-        assert result == mock_image_collection.mosaic.return_value.serialize.return_value
 
     def test_handle_get_dataset_image_invalid_dataset(self, temp_metadata_file: Path) -> None:
         """Test handling of invalid dataset name."""

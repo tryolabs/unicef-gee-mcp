@@ -2,7 +2,6 @@ datasets:
   children_population:
     asset_id: "childpop_constrained"
     description: "Population of children between 0-18 years old."
-    mosaic: true
     source_name: "WorldPop"
     source_url: "https://www.worldpop.org/"
     color_palette: ["#F4E7E1", "#FF9B45", "#D5451B", "#521C0D"]
@@ -11,7 +10,6 @@ datasets:
     asset_id: "river_flood_r100"
     threshold: 0.01
     description: "Zones of river flood. The value indicates the depth in meters."
-    mosaic: true
     source_name: "Joint Research Center"
     source_url: "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/CEMS-GLOFAS/flood_hazard/"
     color_palette: ["#daf8e4", "#97ebdb", "#00c2c7", "#0086ad", "#005582"]
@@ -20,7 +18,6 @@ datasets:
     asset_id: "coastal_flood_r100"
     threshold: 0
     description: "Zones of coastal flood. The value is 1 if the zone is flooded, 0 otherwise."
-    mosaic: true
     source_name: "Joint Research Center"
     source_url: "https://data.jrc.ec.europa.eu/dataset/9e5ba6f1-8d03-4834-8488-2353e504560f"
     color_palette: ["#daf8e4", "#97ebdb", "#00c2c7", "#0086ad", "#005582"]
@@ -29,7 +26,6 @@ datasets:
     asset_id: "storm_giri_rp100"
     threshold: 17.5
     description: "Zones affected by tropical storms."
-    mosaic: true
     source_name: "STORM"
     source_url: "https://data.4tu.nl/datasets/0ea98bdd-5772-4da8-ae97-99735e891aff/4"
     color_palette: ["#8196ab", "#57728f", "#2e5073", "#24405c", "#1b3045"]
@@ -37,7 +33,6 @@ datasets:
   agricultural_drought:
     asset_id: "ASI_return_level_100yr"
     description: "Agricultural drought return level for 100 years."
-    mosaic: false
     threshold: 30
     source_name: "Food and Agriculture Organization of the United Nations"
     source_url: "https://www.fao.org/giews/earthobservation/asis/index_1.jsp?lang=en"
@@ -46,7 +41,6 @@ datasets:
   drought_spei:
     asset_id: "spei12_period_mean_2014_2024"
     description: "Standardized Precipitation-Evapotranspiration Index (SPEI) drought indicator."
-    mosaic: false
     threshold: -1
     source_name: "Copernicus"
     source_url: "https://cds.climate.copernicus.eu/"
@@ -55,7 +49,6 @@ datasets:
   drought_spi:
     asset_id: "spi12_period_mean_2014_2024"
     description: "Standardized Precipitation Index (SPI) drought indicator."
-    mosaic: false
     threshold: -1
     source_name: "Copernicus"
     source_url: "https://cds.climate.copernicus.eu/"
@@ -64,7 +57,6 @@ datasets:
   heatwave_frequency:
     asset_id: "heatwave_frequency_return_level_100yr"
     description: "Frequency of heatwaves, 100-year return level."
-    mosaic: false
     threshold: "mean"
     source_name: "ECMWF"
     source_url: "https://www.ecmwf.int/"
@@ -73,7 +65,6 @@ datasets:
   heatwave_duration:
     asset_id: "heatwave_duration_return_level_100yr"
     description: "Duration of heatwaves, 100-year return level."
-    mosaic: false
     threshold: "mean"
     source_name: "ECMWF"
     source_url: "https://www.ecmwf.int/"
@@ -82,7 +73,6 @@ datasets:
   heatwave_severity:
     asset_id: "heatwave_severity_return_level_100yr"
     description: "Severity of heatwaves, 100-year return level."
-    mosaic: false
     threshold: "mean"
     source_name: "ECMWF"
     source_url: "https://www.ecmwf.int/"
@@ -91,7 +81,6 @@ datasets:
   extreme_heat:
     asset_id: "high_temp_degree_days_return_level_100yr"
     description: "Extreme heat degree days, 100-year return level."
-    mosaic: false
     threshold: 35
     source_name: "ECMWF"
     source_url: "https://www.ecmwf.int/"
@@ -100,7 +89,6 @@ datasets:
   fire_frp:
     asset_id: "FIRMS_FRP_90th_percentile"
     description: "Fire Radiative Power (FRP) 90th percentile."
-    mosaic: false
     threshold: 37.8
     source_name: "NASA"
     source_url: "https://firms.modaps.eosdis.nasa.gov/"
@@ -109,7 +97,6 @@ datasets:
   fire:
     asset_id: "FIRMS_count_90th_percentile"
     description: "Fire frequency 90th percentile."
-    mosaic: false
     threshold: 4.9
     source_name: "NASA"
     source_url: "https://firms.modaps.eosdis.nasa.gov/"
@@ -118,7 +105,6 @@ datasets:
   sand_dust_storm:
     asset_id: "sand_dust_storm_annual"
     description: "Number of sand dust storms in the last 24 years."
-    mosaic: false
     threshold: 0
     source_name: "UNCCD"
     source_url: "https://www.unccd.int/data-knowledge"
@@ -127,7 +113,6 @@ datasets:
   air_pollution:
     asset_id: "pm25_p90_1998_2023"
     description: "PM2.5 90th percentile concentration from 1998 to 2023. This is a proxy for air pollution."
-    mosaic: false
     threshold: 5
     source_name: "ACAG"
     source_url: "https://sites.wustl.edu/acag/datasets/surface-pm2-5/"
@@ -136,7 +121,6 @@ datasets:
   plasmodium_vivax:
     asset_id: "Pv_average_2013_2022"
     description: "Incidente rate of malaria due to Plasmodium vivax."
-    mosaic: false
     threshold: 0.001
     source_name: "Malaria Atlas Project"
     source_url: "https://apps.who.int/malaria/maps/threats/#/download"
@@ -145,7 +129,6 @@ datasets:
   plasmodium_falciparum:
     asset_id: "Pf_average_2013_2022"
     description: "Incidente rate of malaria due to Plasmodium falciparum."
-    mosaic: false
     threshold: 0.001
     source_name: "Malaria Atlas Project"
     source_url: "https://apps.who.int/malaria/maps/threats/#/download"
@@ -154,7 +137,6 @@ datasets:
   risk_index:
     asset_id: "risk_index_test/p1_avg_pixel"
     description: "Each pixel has the value of the children risk index for that area, from 0 to 10."
-    mosaic: false
     threshold: 6
     source_name: "CCRI"
     source_url: "https://unicef.org/"

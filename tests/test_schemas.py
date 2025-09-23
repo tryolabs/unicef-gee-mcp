@@ -104,7 +104,6 @@ class TestDatasetMetadata:
         assert metadata.description == "Test dataset"
         assert metadata.source_name == "Test Source"
         assert metadata.source_url == "https://test.com"
-        assert metadata.mosaic is False  # Default value
         assert metadata.threshold is None  # Default value
         assert metadata.input_arguments is None  # Default value
         assert metadata.color_palette is None  # Default value
@@ -116,13 +115,11 @@ class TestDatasetMetadata:
             description="Test dataset",
             source_name="Test Source",
             source_url="https://test.com",
-            mosaic=True,
             threshold=5.0,
             input_arguments={"param": "value"},
             color_palette=["#FF0000", "#00FF00", "#0000FF"],
         )
 
-        assert metadata.mosaic is True
         assert metadata.threshold == 5.0  # noqa: PLR2004
         assert metadata.input_arguments == {"param": "value"}
         assert metadata.color_palette == ["#FF0000", "#00FF00", "#0000FF"]

@@ -38,7 +38,6 @@ def test_metadata_file() -> Path:
                 "description": "Test flood hazard dataset",
                 "source_name": "GLOFAS",
                 "source_url": "https://cds.climate.copernicus.eu/cdsapp#!/dataset/cems-glofas-reforecast",
-                "mosaic": False,
                 "threshold": 0.5,
                 "color_palette": ["#0000FF", "#FF0000"],
             },
@@ -47,7 +46,6 @@ def test_metadata_file() -> Path:
                 "description": "Test drought dataset",
                 "source_name": "ERA5",
                 "source_url": "https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels",
-                "mosaic": False,
                 "threshold": 75.0,
                 "color_palette": ["#00FF00", "#FF0000"],
             },
@@ -56,7 +54,6 @@ def test_metadata_file() -> Path:
                 "description": "Test population dataset",
                 "source_name": "WorldPop",
                 "source_url": "https://www.worldpop.org/",
-                "mosaic": False,
                 "threshold": 1.0,
                 "color_palette": ["#FFFFFF", "#000000"],
             },
@@ -184,7 +181,6 @@ class TestMCPServerIntegration:
             assert dataset_info.description != ""
             assert dataset_info.source_name
             assert dataset_info.source_name != ""
-            assert isinstance(dataset_info.mosaic, bool)
             assert dataset_name
             assert dataset_name != ""
 

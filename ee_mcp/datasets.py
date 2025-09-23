@@ -3,7 +3,6 @@ from pathlib import Path
 import yaml
 from constants import BASE_ASSETS_PATH
 from schemas import DatasetMetadata
-from utils import get_threshold
 
 
 def load_datasets_metadata(path_to_metadata: Path) -> dict[str, DatasetMetadata]:
@@ -30,10 +29,6 @@ def load_datasets_metadata(path_to_metadata: Path) -> dict[str, DatasetMetadata]
                 dataset_config["asset_id"] = f"{BASE_ASSETS_PATH}/{dataset_config['asset_id']}"
 
                 metadata[dataset_name] = DatasetMetadata(**dataset_config)
-                if metadata[dataset_name].threshold == "mean":
-                    metadata[dataset_name].threshold = get_threshold(
-                        metadata[dataset_name].asset_id, mosaic=metadata[dataset_name].mosaic
-                    )
 
     except FileNotFoundError as e:
         msg = f"Metadata file does not exist: {e}"

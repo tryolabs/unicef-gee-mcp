@@ -198,7 +198,7 @@ def mask_image(
 @mcp.tool(name="filter_image_by_threshold")
 def filter_image_by_threshold(
     image_path: str,
-    threshold: float,
+    threshold: float | str,
     result_name: str,
 ) -> dict[str, Any]:
     """Filter an image by applying a threshold to create a binary mask.
@@ -209,7 +209,8 @@ def filter_image_by_threshold(
 
     Args:
         image_path (str): Path to the input image JSON file to be filtered.
-        threshold (float): Threshold value used for filtering. Pixels above this value are kept.
+        threshold (float|str): Threshold value used for filtering. Pixels above this value are kept.
+        If "mean", the threshold is calculated using the mean of the image.
         result_name (str): Name for the output filtered image file (without extension).
 
     Returns:
