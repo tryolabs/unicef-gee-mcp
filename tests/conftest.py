@@ -52,7 +52,6 @@ def sample_metadata() -> dict[str, Any]:
         "datasets": {
             "test_dataset": {
                 "asset_id": "test_asset",
-                "image_filename": "test.json",
                 "description": "Test dataset",
                 "source_name": "Test Source",
                 "source_url": "https://test.com",
@@ -62,7 +61,6 @@ def sample_metadata() -> dict[str, Any]:
             },
             "mosaic_dataset": {
                 "asset_id": "mosaic_asset",
-                "image_filename": "mosaic.json",
                 "description": "Mosaic dataset",
                 "source_name": "Mosaic Source",
                 "source_url": "https://mosaic.com",

@@ -94,14 +94,12 @@ class TestDatasetMetadata:
     def test_dataset_metadata_creation_minimal(self) -> None:
         """Test DatasetMetadata creation with minimal required fields."""
         metadata = DatasetMetadata(
-            image_filename="test.json",
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
             source_url="https://test.com",
         )
 
-        assert metadata.image_filename == "test.json"
         assert metadata.asset_id == "test_asset"
         assert metadata.description == "Test dataset"
         assert metadata.source_name == "Test Source"
@@ -114,7 +112,6 @@ class TestDatasetMetadata:
     def test_dataset_metadata_creation_full(self) -> None:
         """Test DatasetMetadata creation with all fields."""
         metadata = DatasetMetadata(
-            image_filename="test.json",
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
@@ -133,7 +130,6 @@ class TestDatasetMetadata:
     def test_dataset_metadata_with_complex_asset_id(self) -> None:
         """Test DatasetMetadata with complex asset ID."""
         metadata = DatasetMetadata(
-            image_filename="complex.json",
             asset_id="projects/unicef-ccri/assets/complex_dataset_v2",
             description="Complex dataset",
             source_name="Complex Source",
@@ -146,25 +142,22 @@ class TestDatasetMetadata:
     def test_dataset_metadata_equality(self) -> None:
         """Test DatasetMetadata equality comparison."""
         metadata1 = DatasetMetadata(
-            image_filename="test.json",
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
             source_url="https://test.com",
         )
         metadata2 = DatasetMetadata(
-            image_filename="test.json",
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
             source_url="https://test.com",
         )
         metadata3 = DatasetMetadata(
-            image_filename="different.json",
-            asset_id="test_asset",
-            description="Test dataset",
-            source_name="Test Source",
-            source_url="https://test.com",
+            asset_id="test_asset_different",
+            description="Test dataset different",
+            source_name="Test Source different",
+            source_url="https://test.com/different",
         )
 
         assert metadata1 == metadata2
@@ -173,14 +166,12 @@ class TestDatasetMetadata:
     def test_dataset_metadata_with_special_characters(self) -> None:
         """Test DatasetMetadata with special characters in fields."""
         metadata = DatasetMetadata(
-            image_filename="test_with_ñ_€_characters.json",
             asset_id="test_asset_ñ_€",
             description="Dataset with special characters: ñ, €, 中文",
             source_name="Source with émojis 🌍",
             source_url="https://test.com/ñ-€-中文",
         )
 
-        assert "ñ" in metadata.image_filename
         assert "€" in metadata.asset_id
         assert "中文" in metadata.description
         assert "🌍" in metadata.source_name
@@ -225,11 +216,8 @@ class TestDatasetMetadataEdgeCases:
 
     def test_dataset_metadata_with_empty_strings(self) -> None:
         """Test DatasetMetadata with empty strings."""
-        metadata = DatasetMetadata(
-            image_filename="", asset_id="", description="", source_name="", source_url=""
-        )
+        metadata = DatasetMetadata(asset_id="", description="", source_name="", source_url="")
 
-        assert metadata.image_filename == ""
         assert metadata.asset_id == ""
         assert metadata.description == ""
         assert metadata.source_name == ""
@@ -239,14 +227,12 @@ class TestDatasetMetadataEdgeCases:
         """Test DatasetMetadata with very long strings."""
         long_string = "a" * 1000
         metadata = DatasetMetadata(
-            image_filename=f"{long_string}.json",
             asset_id=long_string,
             description=long_string,
             source_name=long_string,
             source_url=f"https://{long_string}.com",
         )
 
-        assert len(metadata.image_filename) == 1005  # 1000 + ".json"  # noqa: PLR2004
         assert len(metadata.asset_id) == 1000  # noqa: PLR2004
         assert len(metadata.description) == 1000  # noqa: PLR2004
         assert len(metadata.source_name) == 1000  # noqa: PLR2004
@@ -254,7 +240,6 @@ class TestDatasetMetadataEdgeCases:
     def test_dataset_metadata_with_zero_threshold(self) -> None:
         """Test DatasetMetadata with zero threshold."""
         metadata = DatasetMetadata(
-            image_filename="test.json",
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
@@ -267,7 +252,6 @@ class TestDatasetMetadataEdgeCases:
     def test_dataset_metadata_with_negative_threshold(self) -> None:
         """Test DatasetMetadata with negative threshold."""
         metadata = DatasetMetadata(
-            image_filename="test.json",
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
@@ -280,7 +264,6 @@ class TestDatasetMetadataEdgeCases:
     def test_dataset_metadata_with_empty_color_palette(self) -> None:
         """Test DatasetMetadata with empty color palette."""
         metadata = DatasetMetadata(
-            image_filename="test.json",
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
@@ -293,7 +276,6 @@ class TestDatasetMetadataEdgeCases:
     def test_dataset_metadata_with_empty_input_arguments(self) -> None:
         """Test DatasetMetadata with empty input arguments."""
         metadata = DatasetMetadata(
-            image_filename="test.json",
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",

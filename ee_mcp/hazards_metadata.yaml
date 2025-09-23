@@ -1,7 +1,6 @@
 datasets:
   children_population:
     asset_id: "childpop_constrained"
-    image_filename: "children_population_image.json"
     description: "Population of children between 0-18 years old."
     mosaic: true
     source_name: "WorldPop"
@@ -10,7 +9,6 @@ datasets:
 
   river_flood:
     asset_id: "river_flood_r100"
-    image_filename: "river_flood_image.json"
     threshold: 0.01
     description: "Zones of river flood. The value indicates the depth in meters."
     mosaic: true
@@ -20,7 +18,6 @@ datasets:
 
   coastal_flood:
     asset_id: "coastal_flood_r100"
-    image_filename: "coastal_flood_image.json"
     threshold: 0
     description: "Zones of coastal flood. The value is 1 if the zone is flooded, 0 otherwise."
     mosaic: true
@@ -30,7 +27,6 @@ datasets:
 
   tropical_storm:
     asset_id: "storm_giri_rp100"
-    image_filename: "storm_image.json"
     threshold: 17.5
     description: "Zones affected by tropical storms."
     mosaic: true
@@ -40,7 +36,6 @@ datasets:
 
   agricultural_drought:
     asset_id: "ASI_return_level_100yr"
-    image_filename: "agricultural_drought_image.json"
     description: "Agricultural drought return level for 100 years."
     mosaic: false
     threshold: 30
@@ -50,7 +45,6 @@ datasets:
 
   drought_spei:
     asset_id: "spei12_period_mean_2014_2024"
-    image_filename: "drought_spei_image.json"
     description: "Standardized Precipitation-Evapotranspiration Index (SPEI) drought indicator."
     mosaic: false
     threshold: -1
@@ -60,7 +54,6 @@ datasets:
 
   drought_spi:
     asset_id: "spi12_period_mean_2014_2024"
-    image_filename: "drought_spi_image.json"
     description: "Standardized Precipitation Index (SPI) drought indicator."
     mosaic: false
     threshold: -1
@@ -70,7 +63,6 @@ datasets:
 
   heatwave_frequency:
     asset_id: "heatwave_frequency_return_level_100yr"
-    image_filename: "heatwave_frequency_image.json"
     description: "Frequency of heatwaves, 100-year return level."
     mosaic: false
     threshold: "mean"
@@ -80,7 +72,6 @@ datasets:
 
   heatwave_duration:
     asset_id: "heatwave_duration_return_level_100yr"
-    image_filename: "heatwave_duration_image.json"
     description: "Duration of heatwaves, 100-year return level."
     mosaic: false
     threshold: "mean"
@@ -90,7 +81,6 @@ datasets:
 
   heatwave_severity:
     asset_id: "heatwave_severity_return_level_100yr"
-    image_filename: "heatwave_severity_image.json"
     description: "Severity of heatwaves, 100-year return level."
     mosaic: false
     threshold: "mean"
@@ -100,7 +90,6 @@ datasets:
 
   extreme_heat:
     asset_id: "high_temp_degree_days_return_level_100yr"
-    image_filename: "extreme_heat_image.json"
     description: "Extreme heat degree days, 100-year return level."
     mosaic: false
     threshold: 35
@@ -110,7 +99,6 @@ datasets:
 
   fire_frp:
     asset_id: "FIRMS_FRP_90th_percentile"
-    image_filename: "fire_frp_image.json"
     description: "Fire Radiative Power (FRP) 90th percentile."
     mosaic: false
     threshold: 37.8
@@ -120,7 +108,6 @@ datasets:
 
   fire:
     asset_id: "FIRMS_count_90th_percentile"
-    image_filename: "fire_image.json"
     description: "Fire frequency 90th percentile."
     mosaic: false
     threshold: 4.9
@@ -130,7 +117,6 @@ datasets:
 
   sand_dust_storm:
     asset_id: "sand_dust_storm_annual"
-    image_filename: "sand_dust_storm_image.json"
     description: "Number of sand dust storms in the last 24 years."
     mosaic: false
     threshold: 0
@@ -140,7 +126,6 @@ datasets:
 
   air_pollution:
     asset_id: "pm25_p90_1998_2023"
-    image_filename: "air_pollution_image.json"
     description: "PM2.5 90th percentile concentration from 1998 to 2023. This is a proxy for air pollution."
     mosaic: false
     threshold: 5
@@ -150,7 +135,6 @@ datasets:
 
   plasmodium_vivax:
     asset_id: "Pv_average_2013_2022"
-    image_filename: "plasmodium_vivax_image.json"
     description: "Incidente rate of malaria due to Plasmodium vivax."
     mosaic: false
     threshold: 0.001
@@ -160,7 +144,6 @@ datasets:
 
   plasmodium_falciparum:
     asset_id: "Pf_average_2013_2022"
-    image_filename: "plasmodium_falciparum_image.json"
     description: "Incidente rate of malaria due to Plasmodium falciparum."
     mosaic: false
     threshold: 0.001
@@ -170,7 +153,6 @@ datasets:
 
   risk_index:
     asset_id: "risk_index_test/p1_avg_pixel"
-    image_filename: "risk_index_image.json"
     description: "Each pixel has the value of the children risk index for that area, from 0 to 10."
     mosaic: false
     threshold: 6

@@ -35,7 +35,6 @@ def test_metadata_file() -> Path:
         "datasets": {
             "river_flood": {
                 "asset_id": "users/unicef-ccri/Flood_hazard_th_2023_CEMS_GLOFAS_GL_rp_100",
-                "image_filename": "river_flood.json",
                 "description": "Test flood hazard dataset",
                 "source_name": "GLOFAS",
                 "source_url": "https://cds.climate.copernicus.eu/cdsapp#!/dataset/cems-glofas-reforecast",
@@ -45,7 +44,6 @@ def test_metadata_file() -> Path:
             },
             "agricultural_drought": {
                 "asset_id": "users/unicef-ccri/agricultural_drought",
-                "image_filename": "agricultural_drought.json",
                 "description": "Test drought dataset",
                 "source_name": "ERA5",
                 "source_url": "https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels",
@@ -55,7 +53,6 @@ def test_metadata_file() -> Path:
             },
             "children_population": {
                 "asset_id": "users/unicef-ccri/population_children_under_5_2020_100_m",
-                "image_filename": "children_population.json",
                 "description": "Test population dataset",
                 "source_name": "WorldPop",
                 "source_url": "https://www.worldpop.org/",

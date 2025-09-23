@@ -21,7 +21,6 @@ class Config:
 
 @dataclass
 class DatasetMetadata:
-    image_filename: str
     asset_id: str
     description: str
     source_name: str
