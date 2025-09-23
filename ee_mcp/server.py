@@ -235,6 +235,14 @@ def filter_image_by_threshold(
             image_path,
             threshold,
         )
+        if threshold != "mean":
+            try:
+                threshold = float(threshold)
+            except (ValueError, TypeError) as e:
+                msg = f"Invalid threshold value '{threshold}': must be a number or 'mean'"
+                logger.exception(msg)
+                raise ValueError(msg) from e
+
         res = handle_filter_image_by_threshold(image_path, threshold)
         result_path = f"{'/'.join(image_path.split('/')[:-1])}/{result_name}.json"
         save_ee_object(result_path, res)
