@@ -97,13 +97,11 @@ class TestDatasetMetadata:
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
-            source_url="https://test.com",
         )
 
         assert metadata.asset_id == "test_asset"
         assert metadata.description == "Test dataset"
         assert metadata.source_name == "Test Source"
-        assert metadata.source_url == "https://test.com"
         assert metadata.threshold is None  # Default value
         assert metadata.input_arguments is None  # Default value
         assert metadata.color_palette is None  # Default value
@@ -114,7 +112,6 @@ class TestDatasetMetadata:
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
-            source_url="https://test.com",
             threshold=5.0,
             input_arguments={"param": "value"},
             color_palette=["#FF0000", "#00FF00", "#0000FF"],
@@ -130,7 +127,6 @@ class TestDatasetMetadata:
             asset_id="projects/unicef-ccri/assets/complex_dataset_v2",
             description="Complex dataset",
             source_name="Complex Source",
-            source_url="https://complex.com/data",
         )
 
         assert "projects/unicef-ccri/assets" in metadata.asset_id
@@ -142,19 +138,16 @@ class TestDatasetMetadata:
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
-            source_url="https://test.com",
         )
         metadata2 = DatasetMetadata(
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
-            source_url="https://test.com",
         )
         metadata3 = DatasetMetadata(
             asset_id="test_asset_different",
             description="Test dataset different",
             source_name="Test Source different",
-            source_url="https://test.com/different",
         )
 
         assert metadata1 == metadata2
@@ -166,13 +159,11 @@ class TestDatasetMetadata:
             asset_id="test_asset_ñ_€",
             description="Dataset with special characters: ñ, €, 中文",
             source_name="Source with émojis 🌍",
-            source_url="https://test.com/ñ-€-中文",
         )
 
         assert "€" in metadata.asset_id
         assert "中文" in metadata.description
         assert "🌍" in metadata.source_name
-        assert "中文" in metadata.source_url
 
 
 class TestLiteralTypes:
@@ -213,12 +204,11 @@ class TestDatasetMetadataEdgeCases:
 
     def test_dataset_metadata_with_empty_strings(self) -> None:
         """Test DatasetMetadata with empty strings."""
-        metadata = DatasetMetadata(asset_id="", description="", source_name="", source_url="")
+        metadata = DatasetMetadata(asset_id="", description="", source_name="")
 
         assert metadata.asset_id == ""
         assert metadata.description == ""
         assert metadata.source_name == ""
-        assert metadata.source_url == ""
 
     def test_dataset_metadata_with_very_long_strings(self) -> None:
         """Test DatasetMetadata with very long strings."""
@@ -227,7 +217,6 @@ class TestDatasetMetadataEdgeCases:
             asset_id=long_string,
             description=long_string,
             source_name=long_string,
-            source_url=f"https://{long_string}.com",
         )
 
         assert len(metadata.asset_id) == 1000  # noqa: PLR2004
@@ -240,7 +229,6 @@ class TestDatasetMetadataEdgeCases:
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
-            source_url="https://test.com",
             threshold=0.0,
         )
 
@@ -252,7 +240,6 @@ class TestDatasetMetadataEdgeCases:
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
-            source_url="https://test.com",
             threshold=-10.5,
         )
 
@@ -264,7 +251,6 @@ class TestDatasetMetadataEdgeCases:
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
-            source_url="https://test.com",
             color_palette=[],
         )
 
@@ -276,7 +262,6 @@ class TestDatasetMetadataEdgeCases:
             asset_id="test_asset",
             description="Test dataset",
             source_name="Test Source",
-            source_url="https://test.com",
             input_arguments={},
         )
 

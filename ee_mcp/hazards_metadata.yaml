@@ -3,7 +3,6 @@ datasets:
     asset_id: "childpop_constrained"
     description: "Population of children between 0-18 years old."
     source_name: "WorldPop"
-    source_url: "https://www.worldpop.org/"
     color_palette: ["#F4E7E1", "#FF9B45", "#D5451B", "#521C0D"]
 
   river_flood:
@@ -11,7 +10,6 @@ datasets:
     threshold: 0.01
     description: "Zones of river flood. The value indicates the depth in meters."
     source_name: "Joint Research Center"
-    source_url: "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/CEMS-GLOFAS/flood_hazard/"
     color_palette: ["#daf8e4", "#97ebdb", "#00c2c7", "#0086ad", "#005582"]
 
   coastal_flood:
@@ -19,7 +17,6 @@ datasets:
     threshold: 0
     description: "Zones of coastal flood. The value is 1 if the zone is flooded, 0 otherwise."
     source_name: "Joint Research Center"
-    source_url: "https://data.jrc.ec.europa.eu/dataset/9e5ba6f1-8d03-4834-8488-2353e504560f"
     color_palette: ["#daf8e4", "#97ebdb", "#00c2c7", "#0086ad", "#005582"]
 
   tropical_storm:
@@ -27,7 +24,6 @@ datasets:
     threshold: 17.5
     description: "Zones affected by tropical storms."
     source_name: "STORM"
-    source_url: "https://data.4tu.nl/datasets/0ea98bdd-5772-4da8-ae97-99735e891aff/4"
     color_palette: ["#8196ab", "#57728f", "#2e5073", "#24405c", "#1b3045"]
 
   agricultural_drought:
@@ -35,7 +31,6 @@ datasets:
     description: "Agricultural drought return level for 100 years."
     threshold: 30
     source_name: "Food and Agriculture Organization of the United Nations"
-    source_url: "https://www.fao.org/giews/earthobservation/asis/index_1.jsp?lang=en"
     color_palette: ["#fbeebb", "#f7cf89", "#fc9550", "#e85b3f", "#8f2c4a"]
 
   drought_spei:
@@ -43,7 +38,6 @@ datasets:
     description: "Standardized Precipitation-Evapotranspiration Index (SPEI) drought indicator."
     threshold: -1
     source_name: "Copernicus"
-    source_url: "https://cds.climate.copernicus.eu/"
     color_palette: ["#fbeebb", "#f7cf89", "#fc9550", "#e85b3f", "#8f2c4a"]
 
   drought_spi:
@@ -51,7 +45,6 @@ datasets:
     description: "Standardized Precipitation Index (SPI) drought indicator."
     threshold: -1
     source_name: "Copernicus"
-    source_url: "https://cds.climate.copernicus.eu/"
     color_palette: ["#fbeebb", "#f7cf89", "#fc9550", "#e85b3f", "#8f2c4a"]
 
   heatwave_frequency:
@@ -59,7 +52,6 @@ datasets:
     description: "Frequency of heatwaves, 100-year return level."
     threshold: "mean"
     source_name: "ECMWF"
-    source_url: "https://www.ecmwf.int/"
     color_palette: ["#f8f800", "#f8c800", "#f89800", "#f86800", "#f83000"]
 
   heatwave_duration:
@@ -67,7 +59,6 @@ datasets:
     description: "Duration of heatwaves, 100-year return level."
     threshold: "mean"
     source_name: "ECMWF"
-    source_url: "https://www.ecmwf.int/"
     color_palette: ["#f8f800", "#f8c800", "#f89800", "#f86800", "#f83000"]
 
   heatwave_severity:
@@ -75,7 +66,6 @@ datasets:
     description: "Severity of heatwaves, 100-year return level."
     threshold: "mean"
     source_name: "ECMWF"
-    source_url: "https://www.ecmwf.int/"
     color_palette: ["#f8f800", "#f8c800", "#f89800", "#f86800", "#f83000"]
 
   extreme_heat:
@@ -83,7 +73,6 @@ datasets:
     description: "Extreme heat degree days, 100-year return level."
     threshold: 35
     source_name: "ECMWF"
-    source_url: "https://www.ecmwf.int/"
     color_palette: ["#f8f800", "#f8c800", "#f89800", "#f86800", "#f83000"]
 
   fire_frp:
@@ -91,7 +80,6 @@ datasets:
     description: "Fire Radiative Power (FRP) 90th percentile."
     threshold: 37.8
     source_name: "NASA"
-    source_url: "https://firms.modaps.eosdis.nasa.gov/"
     color_palette: ["#e17a57", "#c74b4b", "#a13b3b", "#852b2b", "#6b0808"]
 
   fire:
@@ -99,7 +87,6 @@ datasets:
     description: "Fire frequency 90th percentile."
     threshold: 4.9
     source_name: "NASA"
-    source_url: "https://firms.modaps.eosdis.nasa.gov/"
     color_palette: ["#e17a57", "#c74b4b", "#a13b3b", "#852b2b", "#6b0808"]
 
   sand_dust_storm:
@@ -107,7 +94,6 @@ datasets:
     description: "Number of sand dust storms in the last 24 years."
     threshold: 0
     source_name: "UNCCD"
-    source_url: "https://www.unccd.int/data-knowledge"
     color_palette: ["#ebca97", "#a27f47", "#be7437", "#782a1d", "#1c0f09"]
 
   air_pollution:
@@ -115,7 +101,6 @@ datasets:
     description: "PM2.5 90th percentile concentration from 1998 to 2023. This is a proxy for air pollution."
     threshold: 5
     source_name: "ACAG"
-    source_url: "https://sites.wustl.edu/acag/datasets/surface-pm2-5/"
     color_palette: ["#cec0b8", "#b2a59b", "#9a9381", "#7a745d", "#6f634b"]
 
   plasmodium_vivax:
@@ -123,7 +108,6 @@ datasets:
     description: "Incidente rate of malaria due to Plasmodium vivax."
     threshold: 0.001
     source_name: "Malaria Atlas Project"
-    source_url: "https://apps.who.int/malaria/maps/threats/#/download"
     color_palette: ["#cec0b8", "#b2a59b", "#9a9381", "#7a745d", "#6f634b"]
 
   plasmodium_falciparum:
@@ -131,7 +115,6 @@ datasets:
     description: "Incidente rate of malaria due to Plasmodium falciparum."
     threshold: 0.001
     source_name: "Malaria Atlas Project"
-    source_url: "https://apps.who.int/malaria/maps/threats/#/download"
     color_palette: ["#cec0b8", "#b2a59b", "#9a9381", "#7a745d", "#6f634b"]
 
   risk_index:
@@ -139,5 +122,4 @@ datasets:
     description: "Each pixel has the value of the children risk index for that area, from 0 to 10."
     threshold: 6
     source_name: "CCRI"
-    source_url: "https://unicef.org/"
     color_palette: ["#00ff00", "#ffff00", "#ff8000", "#ff0000", "#800000"]

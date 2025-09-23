@@ -54,7 +54,6 @@ def sample_metadata() -> dict[str, Any]:
                 "asset_id": "test_asset",
                 "description": "Test dataset",
                 "source_name": "Test Source",
-                "source_url": "https://test.com",
                 "threshold": 1.0,
                 "color_palette": ["#FF0000", "#00FF00"],
             },
@@ -62,7 +61,6 @@ def sample_metadata() -> dict[str, Any]:
                 "asset_id": "mosaic_asset",
                 "description": "Mosaic dataset",
                 "source_name": "Mosaic Source",
-                "source_url": "https://mosaic.com",
             },
         }
     }

@@ -24,7 +24,6 @@ class DatasetMetadata:
     asset_id: str
     description: str
     source_name: str
-    source_url: str
     threshold: float | str | None = None
     input_arguments: dict[str, Any] | None = None
     color_palette: list[str] | None = None
