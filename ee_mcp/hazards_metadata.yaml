@@ -10,112 +10,112 @@ datasets:
     threshold: 0.01
     description: "Zones of river flood. The value indicates the depth in meters."
     source_name: "Joint Research Center"
-    color_palette: ["#daf8e4", "#97ebdb", "#00c2c7", "#0086ad", "#005582"]
+    color_palette: ["#cfe8ff", "#8fcbff", "#1d7bff", "#0654be", "#00357d"]
 
   coastal_flood:
     asset_id: "coastal_flood_r100"
     threshold: 0
     description: "Zones of coastal flood. The value is 1 if the zone is flooded, 0 otherwise."
     source_name: "Joint Research Center"
-    color_palette: ["#daf8e4", "#97ebdb", "#00c2c7", "#0086ad", "#005582"]
+    color_palette: ["#cfe8ff", "#8fcbff", "#1d7bff", "#0654be", "#00357d"]
 
   tropical_storm:
     asset_id: "storm_giri_rp100"
     threshold: 17.5
     description: "Zones affected by tropical storms."
     source_name: "STORM"
-    color_palette: ["#8196ab", "#57728f", "#2e5073", "#24405c", "#1b3045"]
+    color_palette: ["#e4eff2", "#c3dce7", "#9ebdd2", "#7e8ab0", "#6d6c91"]
 
   agricultural_drought:
     asset_id: "ASI_return_level_100yr"
     description: "Agricultural drought return level for 100 years."
     threshold: 30
     source_name: "Food and Agriculture Organization of the United Nations"
-    color_palette: ["#fbeebb", "#f7cf89", "#fc9550", "#e85b3f", "#8f2c4a"]
+    color_palette: ["#fdf4cb", "#fbd992", "#f3b431", "#c66216", "#843d09"]
 
   drought_spei:
     asset_id: "spei12_period_mean_2014_2024"
     description: "Standardized Precipitation-Evapotranspiration Index (SPEI) drought indicator."
     threshold: -1
     source_name: "Copernicus"
-    color_palette: ["#fbeebb", "#f7cf89", "#fc9550", "#e85b3f", "#8f2c4a"]
+    color_palette: ["#fdf4cb", "#fbd992", "#f3b431", "#c66216", "#843d09"]
 
   drought_spi:
     asset_id: "spi12_period_mean_2014_2024"
     description: "Standardized Precipitation Index (SPI) drought indicator."
     threshold: -1
     source_name: "Copernicus"
-    color_palette: ["#fbeebb", "#f7cf89", "#fc9550", "#e85b3f", "#8f2c4a"]
+    color_palette: ["#fdf4cb", "#fbd992", "#f3b431", "#c66216", "#843d09"]
 
   heatwave_frequency:
     asset_id: "heatwave_frequency_return_level_100yr"
     description: "Frequency of heatwaves, 100-year return level."
     threshold: "mean"
     source_name: "ECMWF"
-    color_palette: ["#f8f800", "#f8c800", "#f89800", "#f86800", "#f83000"]
+    color_palette: ["#f8e593", "#f8cc14", "#F89800", "#F86800", "#F83000"]
 
   heatwave_duration:
     asset_id: "heatwave_duration_return_level_100yr"
     description: "Duration of heatwaves, 100-year return level."
     threshold: "mean"
     source_name: "ECMWF"
-    color_palette: ["#f8f800", "#f8c800", "#f89800", "#f86800", "#f83000"]
+    color_palette: ["#f8e593", "#f8cc14", "#F89800", "#F86800", "#F83000"]
 
   heatwave_severity:
     asset_id: "heatwave_severity_return_level_100yr"
     description: "Severity of heatwaves, 100-year return level."
     threshold: "mean"
     source_name: "ECMWF"
-    color_palette: ["#f8f800", "#f8c800", "#f89800", "#f86800", "#f83000"]
+    color_palette: ["#f8e593", "#f8cc14", "#F89800", "#F86800", "#F83000"]
 
   extreme_heat:
     asset_id: "high_temp_degree_days_return_level_100yr"
     description: "Extreme heat degree days, 100-year return level."
     threshold: 35
     source_name: "ECMWF"
-    color_palette: ["#f8f800", "#f8c800", "#f89800", "#f86800", "#f83000"]
+    color_palette: ["#f8e593", "#f8cc14", "#F89800", "#F86800", "#F83000"]
 
   fire_frp:
     asset_id: "FIRMS_FRP_90th_percentile"
     description: "Fire Radiative Power (FRP) 90th percentile."
     threshold: 37.8
     source_name: "NASA"
-    color_palette: ["#e17a57", "#c74b4b", "#a13b3b", "#852b2b", "#6b0808"]
+    color_palette: ["#F0F0DC", "#FFD282", "#FF8C3C", "#DC3C1E", "#5A0000"]
 
   fire:
     asset_id: "FIRMS_count_90th_percentile"
     description: "Fire frequency 90th percentile."
     threshold: 4.9
     source_name: "NASA"
-    color_palette: ["#e17a57", "#c74b4b", "#a13b3b", "#852b2b", "#6b0808"]
+    color_palette: ["#F0F0DC", "#FFD282", "#FF8C3C", "#DC3C1E", "#5A0000"]
 
   sand_dust_storm:
     asset_id: "sand_dust_storm_annual"
     description: "Number of sand dust storms in the last 24 years."
     threshold: 0
     source_name: "UNCCD"
-    color_palette: ["#ebca97", "#a27f47", "#be7437", "#782a1d", "#1c0f09"]
+    color_palette: ["#faf0dc", "#e6d2b4", "#c8aa82", "#a0785a", "#261f28"]
 
   air_pollution:
     asset_id: "pm25_p90_1998_2023"
     description: "PM2.5 90th percentile concentration from 1998 to 2023. This is a proxy for air pollution."
     threshold: 5
     source_name: "ACAG"
-    color_palette: ["#cec0b8", "#b2a59b", "#9a9381", "#7a745d", "#6f634b"]
+    color_palette: ["#d0dde5", "#99a1b4", "#7c6e87", "#5a4b5e", "#261f27"]
 
   plasmodium_vivax:
     asset_id: "Pv_average_2013_2022"
     description: "Incidente rate of malaria due to Plasmodium vivax."
     threshold: 0.001
     source_name: "Malaria Atlas Project"
-    color_palette: ["#cec0b8", "#b2a59b", "#9a9381", "#7a745d", "#6f634b"]
+    color_palette: ["#e8f0e3", "#bcd4b4", "#8ba889", "#607c66", "#35503d"]
 
   plasmodium_falciparum:
     asset_id: "Pf_average_2013_2022"
     description: "Incidente rate of malaria due to Plasmodium falciparum."
     threshold: 0.001
     source_name: "Malaria Atlas Project"
-    color_palette: ["#cec0b8", "#b2a59b", "#9a9381", "#7a745d", "#6f634b"]
+    color_palette: ["#e8f0e3", "#bcd4b4", "#8ba889", "#607c66", "#35503d"]
 
   risk_index:
     asset_id: "risk_index_test/p1_avg_pixel"
