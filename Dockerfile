@@ -29,12 +29,12 @@ RUN useradd --create-home --shell /bin/bash app && \
     chown -R app:app /app
 USER app
 
-# Expose port
-EXPOSE 8000
+# Expose internal MCP port (matches ee_mcp/config.yaml)
+EXPOSE 6002
 
-# Health check
+# Health check (SSE endpoint)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/', timeout=5)"
+    CMD python -c "import requests; requests.get('http://localhost:6002/sse', timeout=5)"
 
 # Run the application with secrets loading
 CMD ["uv", "run", "ee_mcp/server.py"]

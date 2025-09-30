@@ -95,9 +95,11 @@ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"
 ```yaml
 server:
   host: "0.0.0.0" # Server bind address
-  port: 8003 # Server port
+  port: 6002 # Internal MCP port
   transport: "sse" # MCP transport protocol
 ```
+
+The server is reachable only on the internal Docker network. The agent connects via `geospatial_mcp:6002/sse`.
 
 ### Dataset Configuration
 
@@ -298,6 +300,16 @@ These helper scripts generate data used by tests and quick analyses. They requir
 - **Least Privilege**: Service account has minimal required permissions
 - **Private Assets**: UNICEF datasets stored in private Earth Engine assets
 - **Network Security**: Server accessible only within internal network
+
+## Secrets and environment
+
+Required secret for runtime:
+
+- `ee_auth.json`: Google service account key (mounted as Docker secret). The path is configured in `ee_mcp/config.yaml` (`path_to_ee_auth`).
+
+Notes:
+
+- The service account must have Earth Engine access and permissions to the required assets.
 
 ## Contributing
 
