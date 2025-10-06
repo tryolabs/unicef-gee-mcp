@@ -27,7 +27,7 @@ testpaths = ["tests"]
 
 [dependency-groups]
 dev = [
-    "ruff>=0.11.13,<0.12",
+    "ruff>=0.11.13,<0.14",
     "docstr-coverage>=2.3.2,<3",
     "pytest>=8.4.0,<9",
     "pytest-cov>=6.1.1,<7",
