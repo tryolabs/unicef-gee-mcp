@@ -552,10 +552,10 @@ def get_zone_of_area(
         ValueError: If the specified area type is not supported.
 
     Example:
-        >>> get_zone_of_area("Kenya", "country", "session_123")
+        >>> get_zone_of_area("KEN", "country", "session_123")
         {
-            "zone_path": "data/session_123/zone_Kenya.json",
-            "input_arguments": {"area_name": "Kenya", "area_type": "country"}
+            "zone_path": "data/session_123/zone_KEN.json",
+            "input_arguments": {"area_name": "KEN", "area_type": "country"}
         }
     """
     logger.info("Called get_zone_of_area with area_name=%s and area_type=%s", area_name, area_type)
