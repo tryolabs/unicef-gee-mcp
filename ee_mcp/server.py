@@ -539,6 +539,7 @@ def get_zone_of_area(
 
     Args:
         area_name (str): Name of the geographic area to retrieve.
+            When area_type is 'country', it should be the ISO 3166-1 alpha-3 code.
         area_type (AREA_TYPES): Type of area ('country' or 'admin1').
         trace_id (str): Unique identifier for the processing session.
 
